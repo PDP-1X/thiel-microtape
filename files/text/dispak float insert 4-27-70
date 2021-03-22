@@ -1,0 +1,260 @@
+/what about your title?
+/6.273 macro system
+/dispak plus floating point package macros
+/uses improved dispak with short message macro and variable sized characters
+.knb=4600
+.but=4602
+.swt=4604
+.sop=4606
+.sdp=4610
+.cd=4612
+.cdx=4614
+.cdy=4615
+.lin=4616
+.tpn=4622
+.pnt=4624
+.save=4626
+.vline=4621
+.hline=4620
+.rstor=4630
+.txx=4632
+.size=4633
+.fpi2=7245
+.fmin1=7251
+.fmin2=7253
+.fhalf=7255
+.fpt1=7257
+.fpt01=7261
+.fzero=7227
+.fone=7231
+.ftwo=7233
+.fthre=7235
+.ffour=7237
+.ften=7221
+.fpi=7243
+.f2pi=7247
+.fhun=7217
+.fmul=4660
+.fdiv=4661
+.fadd=4657
+.fln=4664
+.flog=4671
+.fsqrt=4702
+.fexp=4707
+.fix=4714
+.float=4722
+.fixa=4727
+.fixb=4736
+.frtr=4663
+.frti=4662
+.fip=4651
+.fop=4635
+
+
+define	setxy x,y
+	jdp .save
+	lac x	sal 8s	dac .cdx
+	lio y	sil 8s	dio .cdy
+	jdp .rstor
+	termin
+
+define	penpos x,y
+	jdp .save
+	jdp .tpn
+	dac x	dio y
+	jdp .rstor
+	termin
+
+define	writec c
+	jdp .save
+	lac c	jdp .cd
+	jdp .rstor
+	termin
+
+define	point x,y
+	jdp .save
+	lac x
+	lio y
+	jdp .pnt
+	jdp .rstor
+	termin
+
+define	line x1,y1,x2,y2
+	jdp .save
+	lac x2	lio y2	dac . 5	dio . 5
+	lac x1	lio y1
+	jdp .lin
+	0	0
+	jdp .rstor
+	termin
+
+define	hline y,x1,x2
+	jdp i .hline
+	y
+	x1
+	x2
+	terminate
+
+define	vline x,y1,y2	/y2>y1
+	jdp i .vline
+	x
+	y1
+	y2
+	terminate
+
+
+define	octdis n
+	jdp .save
+	lac n
+	jdp .sop
+	jdp .rstor
+	termin
+
+define	decdis n
+	jdp .save
+	lac n
+	jdp .sdp
+	jdp .rstor
+	termin
+
+define	knob n,val
+	jdp .save
+	jdp .knb
+	ckn n'00
+	val
+	jdp .rstor
+	termin
+
+define	button n,ldown
+	jdp .save
+	jdp .but
+	n
+	jmp ldown
+	termin
+
+define	switch m,ldown
+	jdp .save
+	jdp .swt
+	m
+	jmp ldown
+	termin
+
+define	message w
+	jdp .save
+	jsp .txx
+	text *w*37**
+	jdp .rstor
+	termin
+
+define	setsize x
+	jdp .save
+	lio x
+	jdp .size
+	jdp .rstor
+	termin
+
+
+/floating point macros for 6.273
+
+
+
+define	finput
+	jdp .fip
+	terminate
+
+define	fotput
+	jdp .fop
+	terminate
+
+define	negate
+	cmi∨cma
+	terminate
+
+define	fadd a
+	jdp .fixa
+	jdp i .fadd
+	a
+	jdp .fixb
+	terminate
+
+define	fmul a
+	jdp .fixa
+	jdp i .fmul
+	a
+	jdp .fixb
+	terminate
+
+define	fdiv a
+	jdp .fixa
+	jdp i .fdiv
+	a
+	jdp .fixb
+	terminate
+
+define	frti n
+	jdp .fixa
+	jdp i .frti
+	n
+	jdp .fixb
+	terminate
+
+define	frtr a
+	jdp .fixa
+	jdp i .frtr
+	a
+	jdp .fixb
+	terminate
+
+
+define	fln
+	jdp .fln
+	terminate
+
+define	flog
+	jdp .flog
+	terminate
+
+define	fsqrt
+	jdp .fsqrt
+	terminate
+
+define	fexp
+	jdp .fexp
+	terminate
+
+define	ifix
+	jdp .fix
+	terminate
+
+define	float
+	jdp .float
+	terminate
+
+define	load x
+	lac x
+	lio x 1
+	terminate
+
+define	store x
+	dac x
+	dio x 1
+	terminate
+
+.knb=4600
+.but=4602
+.swt=4604
+.sop=4606
+.sdp=4610
+.cd=4612
+.cdx=4614
+.cdy=4615
+.lin=4616
+.tpn=4622
+.pnt=4624
+.save=4626
+.vline=4621
+.hline=4620
+.rstor=4630
+.txx=4632
+.size=4633
+.fp2se

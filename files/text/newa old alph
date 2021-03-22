@@ -1,0 +1,1939 @@
+
+orbit old
+/pre howell space war
+
+ioh=iot i
+
+
+3/	jmp sbr	/ sequence break
+	jmp a40	/ button control
+	jmp a1	/ test word control
+
+
+/ interesting and often changed constants
+
+/symb loc   usual value (all instructions are executed,
+	/ and may be replaced by jda or jsp)
+
+tno,  6,	law i 41 	/ number of torps + 1
+tvl,  7,	sar 4s	/ torpedo velocity
+rlt, 10,	law i 20	/ torpedo reload time
+tlf, 11,	law i 140	/ torpedo life
+foo, 12,	-20000	/ fuel supply
+maa, 13,	10	/ spaceship angular acceleration
+sac, 14,	sar 4s	/ spaceship acceleration
+str, 15,	100	/ star capture radius
+me1, 16,	6000	/ collision "radius"
+me2, 17,	3000	/ above/2
+ddd, 20,	-0	/ 0 to save space for ddt
+the, 21,	sar 9s	/ amount of torpedo space warpage
+mhs, 22,	law i 10	/ number of hyperspace shots
+hd1, 23,	law i 40	/ time in hyperspace before breakout
+hd2, 24,	law i 100	/ time in hyperspace breakout
+hd3, 25,	law i 200	/ time to recharge hyperfield generators
+hr1, 26,	scl 9s	/ scale on hyperspatial displacement
+hr2, 27,	scl 4s	/ scale on hyperspatially induced velocity
+hur, 30,	40000	/ hyperspatial uncertancy
+ran, 31,	0	/ random number
+grv, 32,	sar 6s	/ gravitational constant
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+define	swap
+	repeat 2, rcr 9s
+termin
+
+define	init a, b
+	law b
+	dap a
+termin
+
+define	setup a, b
+	law i b
+	dac a
+termin
+
+define	count a, b
+	isp a
+	jmp b
+termin
+
+define	index a, b, c
+	idx a
+	sas b
+	jmp c
+termin
+
+define	xincr x, y, ins
+	lac y
+	ins ‾ssn
+	dac y
+	lac x
+	ins ‾scn
+	dac x
+termin
+
+define	yincr x, y, ins
+lac y
+	ins ‾scn
+	dac y
+	lac x
+printx -ins-
+	printo -[ins]
+	-[ins] add sub ssn
+	dac x
+termin
+
+define	dispatch
+	add (. 3
+	dap . 1
+	jmp .
+termin
+
+define	scale a, b, c
+	lac a
+	sar b
+	dac c
+termin
+
+define	diff v, s, sf
+	add i v
+
+
+
+
+
+
+
+	dac i v
+	xct sf
+	add i s
+	dac i s
+termin
+
+define	random
+	lac (472731
+	xor ran
+	ral 1s
+	adm ran
+termin
+
+define	ranct s, ss, c
+	random
+	s
+	ss
+	sma
+	cma
+	dac c
+termin
+
+define	varsft
+	dzm ‾xys
+	dac ‾t1
+	idx ‾xys
+v2,	idx ‾xys
+	lac ‾t1
+	scr 2s
+	dac ‾t1
+	sza
+jmp v2
+	scr 2s
+	swap
+termin
+
+define	undosft
+	dac t1
+	dio ‾t2
+	lac ‾xys
+	add sff
+	dap .+1
+	lac .
+	dac .+6
+	dac .+6
+	xor (10000	/ change scr to scl or scl to scr.
+	dac ‾xyt
+	lac ‾t1
+	dio ‾t2
+	scr
+	scr
+termin
+
+define	integrate a, b
+	cli
+	lac i a
+	scr 9s
+	scr 1s
+	div ‾t1
+	hlt
+
+
+
+
+
+
+
+cma∨cli
+	xct ‾xyt
+	xct grv
+	dac b
+	terminate
+
+sff,	lac .-1
+	scr 7s
+	scr 6s
+	scr 5s
+	scr 4s
+	scr 3s
+	scr 2s
+	scr 1s
+	scr
+	scl 1s
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/sine-cosine subroutine Adams associates
+/calling sequence= number in AC, jda sin or jdacos.
+/argument is between _+2 pi, with binary point to right of bit 3.
+/answer has binary point to right of bit 0.  Time = 2.35-? ms.
+/changed for auto-multiply , ddp 1/19/63
+
+cos,	0
+	dap csx
+	lac (62210
+	add cos
+	dac sin
+	jmp .+4
+
+sin,	0
+	dap csx
+	lac sin
+	spa
+si1,	add (311040
+	sub (62210
+	sma
+	jmp si2
+	add (62210
+
+si3,	ral 2s
+	mul (242763
+	dac sin
+	mul sin
+	dac cos
+	mul (756103
+	add (121312
+	mul cos
+	add (532511
+	mul cos
+	add (144417
+	mul sin
+	scl 3s
+	dac cos
+	xor sin
+	sma
+	jmp csx-1
+	lac (377777
+	lio sin
+	spi
+	cma
+	jmp csx
+
+	lac cos
+csx,	jmp .
+
+si2,	cma
+	add (62210
+	sma
+	jmp si3
+	add (62210
+	spa
+	jmp .+3
+	sub (62210
+	jmp si3
+
+
+
+
+
+
+
+
+	sub (62210
+	jmp si1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/integer square root
+/input in ac, binary point to right of bit 17, jda sqt
+/answer in ac with binary point between bits 8 and 9
+/largest input number = 177777
+
+sqt,	0
+	dap sqx
+	law i 23
+	dac sq1
+	dzm sq2
+	lio sqt
+	dzm sqt
+
+sq3,	isp sq1
+	jmp .+3
+	lac sq2
+sqx,	jmp .
+
+	lac sq2
+	sal 1s
+	dac sq2
+	lac sqt
+	rcl 2s
+	sza i
+	jmp sq3
+	dac sqt
+	lac sq2
+	sal 1s
+	add (1
+	sub sqt
+szm
+	jmp sq3
+	spa
+	cma
+	dac sqt
+	idx sq2
+	jmp sq3
+
+sq1,	0
+sq2,	0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/sequence break handler
+
+sbr,	sas (1
+	jmp sbf	/clock breaks only
+	dsc 100
+	iot 610
+	idx 1
+	jmp i 1
+
+sbf,	ral 6s
+	ior (dsc
+	dac . 1
+	hlt
+	jmp i 1
+
+cst,	0	/set clock
+	law cs1
+	dap 3
+	asc 100
+	rbt
+	ril 9s
+	spi i
+	jmp cs2
+	idx t1
+	jmp cst 4
+cs1,	clf 7
+	law 2500
+	sub t1
+	sma
+	stf 6
+	spa
+	stf 5
+	spa
+	cma
+	sub (250
+	spa
+	clf 7
+	dzm t1
+	iot 610
+	jmp i 1
+cs2,	law sbr	/done
+	dap 3
+	dsc 100
+	jmp i cst
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/outline compiler
+/ac=where to compile to, call   jda oc
+			/ot=address of outline table
+
+define
+	plinst a
+	lac a
+	dac i oc
+	idx oc
+	terminate
+
+define
+	comtab a, b
+	plinst a
+	jsp ocs
+	lac b
+	jmp oce
+	terminate
+
+ocs,	dap ocz		/puts in swap
+	dio i oc
+	idx oc
+	dio i oc
+	idx oc
+ocz,	jmp .
+
+oc,	0		/outline compiler proper
+	dap ocx
+	lac i ocx
+	dap ocg
+	plinst (stf 5
+	dap ocm
+	idx ocx
+ock,	plinst (lac ‾sx1
+	plinst (lio ‾sy1
+	clf 6
+ocj,	setup ‾occ,6
+ocg,	lio .		/outline table
+och,	cla
+	rcl 3s
+	dio ‾oci
+	lio (rcl 9s
+	dispatch
+	opr
+	jmp oc1
+oco,	jmp oc2
+ocq,	jmp oc3
+ocp,	jmp oc4
+ocr,	jmp oc5
+	jmp oc6
+
+	plinst (szf 5	/7 code
+	add (4
+	dap ocn
+	plinst ocn
+	plinst (dac ‾sx1
+	plinst (dio ‾sy1
+	plinst (jmp sq6
+	plinst (clf 5
+
+
+
+
+
+
+
+	plinst (lac ‾scm
+	plinst (cma
+	plinst (dac ‾scm
+	plinst (lac ‾ssm
+	plinst (cma
+	plinst (dac ‾ssm
+	plinst (lac ‾csm
+	plinst (lio ‾ssd
+	plinst (dac ‾ssd
+	plinst (dio ‾csm
+
+	plinst (lac ‾ssc
+	plinst (lio ‾csn
+	plinst (dac ‾csn
+	plinst (dio ‾ssc
+	plinst ocm
+ocx,	jmp .
+
+ocm,	jmp .
+ocn,	jmp .
+
+oc1,	plinst (add ‾ssn
+	jsp ocs
+	lac (sub ‾scn
+oce,	dac i oc
+	idx oc
+	jsp ocs
+	plinst (ioh
+	lac (dpy-4000
+ocd,	dac i oc
+	idx oc
+	lio ‾oci
+	count ‾occ, och
+	idx ocg
+	jmp ocj
+
+oc2,	comtab (add ‾scm, (add ‾ssm
+oc3,	comtab (add ‾ssc, (sub ‾csm
+oc4,	comtab (sub ‾scm, (sub ‾ssm
+oc5,	comtab (add ‾csn, (sub ‾ssd
+oc6,	szf 6
+	jmp oc9
+	stf 6
+	plinst (dac ‾ssa
+	lac (dio ‾ssi
+	jmp ocd
+oc9,	clf 6
+	plinst (lac ‾ssa
+	lac (lio ‾ssi
+	jmp ocd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/display a star
+
+define
+	starp
+	add ‾bx
+	swap
+	add ‾by
+	swap
+	ioh
+	dpy-4000
+	terminate
+
+blp,	dap blx		/star
+	szs 60
+	jmp blx
+	random
+	rar 9s
+	and (add 340
+	spa
+	xor (377777
+	dac ‾bx
+	lac ran
+	ral 4s
+	and (add 340
+	spa
+	xor (377777
+	dac ‾by
+	jsp bpt
+	ioh
+blx,	jmp .
+
+bpt=.	dap bpx
+	random
+	sar 9s
+	sar 5s
+	spa
+	cma
+	sal 3s
+	add (bds
+	dap bjm
+	cla cli clf 6-opr-opr
+	dpy-4000
+bjm,	jmp .
+bds,	repeat 20, starp
+	szf 6
+bpx,	jmp .
+	stf 6
+	cma
+	swap
+	cma
+	swap
+	jmp bjm
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/background display 9 my 1967 acg
+
+bck, 	dap bcr
+	szs 40
+	jmp bcr
+	idx ‾bcd	/star movement
+	rar 1s
+	spa
+bcr, 	jmp .
+	clf 5
+bcs, 	law j	/current start
+	dap bcy
+	dap bcx
+	idx bcy
+bcx, 	lio .	/x
+	law 7000
+	rcl 5s
+	ral 4s
+	dap bcy 1	/set up intensity
+	cla∨swp
+	add bcd
+	rcl 3s
+	sni i
+	jmp bcn	/not this one
+	add (400000
+bcy, 	lio .	/y
+	iot .
+	stf 5
+	idx bcy
+	sas (lio q 2
+	jmp bcs 2
+	law j	/display wrap around
+	jmp bcs 1
+bcn, 	szf 5
+	jmp bcr
+	idx bcy	/move start
+	dap bcs
+	sas (lio q 2
+	jmp bcs 2
+	law j	/start wrap around
+	dap bcs
+	jmp bcs 1
+
+
+j=6100
+q=7750
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+nob=30			/total number of colliding objects
+
+ml0,	setup ‾mtc, 5000	/delay for loop
+	init ml1, mtb	/loc of calc routines
+	init mx1, nx1	/x
+	init my1, ny1	/y
+	init ma1, na1	/count for length of explosion or torp
+	init mb1, nb1	/time taken by calc routines
+	init mdx, ndx	/dx
+	init mdy, ndy	/dy
+	init mom, nom	/angular velocity
+	init mth, nth	/angle
+	init mfu, nfu	/fuel
+	init mtr, ntr	/number torps remaining
+	init mot, not	/outline of spaceship
+	init mco, nco	/old control word
+	law nh1
+	dac ‾mh1
+	law nh2
+	dac ‾mh2
+	law nh3
+	dac ‾mh3
+	law nh4
+	dac ‾mh4
+	lac mtb
+	sza i
+	jmp mdn
+	lac mtb 1
+	sza i
+	jmp mdn	/ship all gone away
+	lac ntr	/test if both ships out of torps
+	ior ntr 1
+	sza i
+	jmp mdn
+	jmp ml1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/main frame control loop
+
+idl,	idx mth
+	idx mfu
+	idx mtr
+	idx mco
+	idx mot
+	idx mom
+	idx ‾mh1
+	idx ‾mh2
+	idx ‾mh3
+	idx ‾mh4
+ids,	idx mx1
+	idx my1
+	idx ma1
+	idx mb1
+	idx mdy
+	idx mdx
+ml1,	lac .	/1st control word
+	sza i	/zero if not active
+	jmp mq1	/not active
+	dap mjm	/jmp to calc routine or make explode
+	spa	/control word + if object collidable
+	jmp mjm
+
+	law 1	/proximity test
+	add ml1
+	sad (lac mtb nob
+	jmp mjm-1
+	dap ml2
+	law 1
+	add mx1
+	dap mx2
+	law 1
+	add my1
+	dap my2
+	law 1
+	add ma1
+	dap ma2
+	law 1
+	add mb1
+	dap mb2
+
+ml2,	lac .	/2nd control word
+	spq	/can it collide?
+	jmp mq2	/no
+mx1,	lac .	/calc if collision
+mx2,	sub .	/delta x
+	spa	/take abs val
+	cma
+	dac ‾t1
+	sub me1	/<epsilon?
+	sma
+	jmp mq2
+my1,	lac .
+my2,	sub .
+	spa
+	cma
+	sub me1	/<epsilon?
+
+
+
+
+
+
+
+	sma
+	jmp mq2	/no
+	add ‾t1
+	sub me2
+	spa
+	jmp mjm
+mq2,	idx mx2	/end of comparison loop
+	idx my2
+	idx ma2
+	idx mb2
+	index ml2, (lac mtb nob, ml2
+
+	idx mjm
+mjm,	jmp .	/to calc routine or make object explode
+
+mb1,	lac .
+	add ‾mtc
+	dac ‾mtc
+mq1,	idx ml1
+	sad (lac mtb 1
+	jmp idl
+	sas (lac mtb nob
+	jmp ids
+	jsp bck
+	jsp blp	/display massive star
+	rbt	/clock set req
+	ril 9s
+	spi
+	jdp cst
+	asc 100
+	wat	/hold for next frame
+	jmp ml0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/misc calculation routines
+
+/ control word get routines
+
+mg1,	dap mg3
+	rbt
+	rcl 5s
+	ral 9s
+	rcl 4s
+	swp
+mg3,	jmp .
+
+mg2,	dap mg4
+	lat
+	swap
+mg4,	jmp .
+
+/set up explosion
+
+blt,	law 20
+	dac i mb1
+	dac i mb2
+
+sex,	lac (mex 400000	/atternate entry point
+	dac i ml1
+	dac i ml2
+	lac i mb1	/duration of explosion
+mb2,	add .
+	cma
+	sar 8s
+	add (1
+ma1,	dac .
+ma2,	dac .
+	jmp mb1
+
+/explosion
+
+mex,	lac i mdx
+	sar 3s
+	add i mx1
+	dac i mx1
+	lac i mdy
+	sar 3s
+	add i my1
+	dac i my1
+	law mst
+	dap msh
+	lac i mb1	/time involved
+	cma cli-opr
+	sar 3s
+	dac ‾t1
+	sub (140
+	sma
+	idx msh
+mz1,	lac ran
+	and (777
+	ior (scl
+	dac mi1
+	random
+
+
+
+
+
+
+
+	scr 9s
+	sir 9s
+msh,	xct .
+mi1,	hlt
+	add i my1
+	swap
+	add i mx1
+	dpy-i 300
+	count ‾t1, mz1
+	count i ma1, mb1
+	dzm i ml1
+	jmp mb1
+
+mst,	scr 1s
+	scr 3s
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/torpedo calc routine
+
+tcr,	jmp blt
+	count i ma1, tc1
+	lac (mex 400000
+	dac i ml1
+	law i 2
+	dac i ma1
+	law 20
+	dac i mb1
+	jmp mb1
+
+tc1,	lac 1 mx1
+	sar 9s
+	xct the
+mdy,	add .
+	dac i mdy
+	sar 3s
+	add i my1
+	dac i my1
+	sar 9s
+	xct the
+mdx,	add .
+	dac i mdx
+	sar 3s
+	add i mx1
+	dac i mx1
+	lio i my1
+	dpy-i 100
+	jmp mb1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/hyperspace routines
+
+/this rousine handles a non-colliding ship invisibly
+/in hyperspace
+
+hp1,	count i ma1, mb1
+	law hp3	/next step
+	dac i ml1
+	law 7
+	dac i mb1
+	random
+	scr 9s
+	sir 9s
+	xct hr1
+	add i mx1
+	dac i mx1
+	swap
+	add i my1
+	dac i my1
+	dzm i mdx
+	dzm i mdy
+	xct hd2
+	dac i ma1
+	jmp mb1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/this routine handles a ship breaking out of hyperspace
+
+hp3,	jmp sex
+	count i ma1, hp6,
+	law 2000
+	dac i mb1
+	lac i ‾mh4
+	add hur
+	dac i ‾mh4
+	random
+	ior (400000
+	add i ‾mh4
+	sma
+	jmp po1
+	lac i ‾mh1
+	dac i ml1
+	lac ran
+	scr 9s
+	sir 9s
+	xct hr2
+	dac i mdy
+	dio i mdx
+	setup ‾t1, 3
+	lac ran
+	dac i mth
+hp4,	lac i mth
+	sma
+	sub (311040
+	spa
+	add (311040
+	dac i mth
+	count ‾t1, hp4
+	count i mh2, hp7
+	dzm i mh2
+hp7,	xct hd3
+	dac i mh3
+hp6,	lac i mx1
+	lio i my1
+	dpy-i 200
+	jmp mb1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/spaceship calc
+
+ss1,	jmp sex	/something came too close
+	jsp i cwg
+	jmp sr0
+
+ss2,	jmp sex
+	jsp i cwg
+	rir 4s
+sr0,	dio ‾scw
+
+sc1,	clf 6 cla-opr	/update angle
+	spi
+	add maa
+	ril 1s
+	spi
+	sub maa
+mom,	add .
+	dac i mom
+	szs 10
+	jmp . 3
+	dzm i mom
+	ral 5s
+	ril 1s
+	spi
+	stf 6
+mfu,	lio .
+	spi i
+	clf 6
+
+mth,	add .
+	sma
+	sub (311040
+	spa
+	add (311040
+	dac i mth
+	jda sin
+	dac ‾sn
+	dzm ‾bx
+	dzm ‾by
+	szs 60
+	jmp bsg
+	lac i mx1
+	dac ‾t1
+	mul ‾t1
+	scr 1s
+	dac ‾acx
+	cla
+	scr 2s
+	dio ‾iox
+	lac i my1
+	dac ‾t1
+	mul ‾t1
+	scr 1s
+	dac ‾acy
+
+	cla
+	scr 2s
+	swap
+	add ‾iox
+
+
+
+
+
+
+
+	swap
+	scl 2s
+	add ‾acx
+	add ‾acy
+
+	sub str
+	spq
+	jmp pof
+	add str
+	varsft
+	dac ‾t1
+	jda sqt
+	mul ‾t1
+	undosft
+	scr 9s
+	scr 6s
+	szs i 20	/switch 2 for light star
+	scr 2s
+	sza
+	jmp bsg
+	scr 1s
+	dio ‾t1
+	integrate mx1, ‾bx
+	integrate my1, ‾by
+bsg,	lac i mth
+	jda cos
+	dac ‾cs
+	sar 9s
+	xct sac
+	szf i 6
+	cla
+	add ‾by
+	diff mdy, my1, (sar 3s
+	lac ‾sn
+	sar 9s
+	xct sac
+	cma
+	szf i 6
+	cla
+	add ‾bx
+	diff mdx, mx1, (sar 3s
+	scale ‾‾sn, 5s, ‾ssn
+	scale ‾cs, 5s, ‾scn
+	lac i mx1
+	sub ‾ssn
+	dac ‾sx1
+	sub ‾ssn
+	dac ‾stx
+	lac i my1
+	add ‾scn
+	dac ‾sy1
+	add ‾scn
+	dac ‾sty
+	scale ‾sn, 9s, ssn
+	scale ‾cs, 9s, scn
+	dac scm
+	lac ‾ssn
+	dac ‾ssm
+	add ‾scn
+	dac ‾ssc
+
+
+
+
+
+
+
+	dac ‾ssd
+	lac ‾ssn
+	sub ‾scn
+	dac ‾csn
+	cma
+	dac ‾csm
+cla∨cli
+	dpy-4000
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mot, sp5,	jmp i .
+sq6,	szf i 6
+	jmp sq9	/not blasting or no fuel
+	ranct sar 9s, sar 4s, ‾src
+	scale ‾sn, 8s, ‾ssn
+	scale ‾cs, 8s, ‾scn
+sq7,	count i mfu, st2
+	dzm i mfu
+	jmp sq9
+st2,	yincr ‾sx1, ‾sy1, sub
+	lio ‾sy1
+	dpy-i
+	count ‾src, sq7
+sq9,	count i ma1, sr5	/check if torp tube reloaded
+	dzm i ma1	/prevent count around
+mco,	lac	/previous control word
+	cma
+	szs i 30
+	clc
+	and ‾scw	/present control word
+	ral 3s	/torp bit to bit 0
+	sma
+	jmp sr5	/no launch
+mtr,	count ntr, st1	/check if torps exhausted
+	dzm i mtr	/prevent count around
+	jmp sr5
+st1,	init sr1, mtb nob-1	/search for unused objects
+sr1,	lac
+	sza i	/0 if unused
+	jmp sr2
+	law i 1
+	add sr1
+	dap sr1
+	sas (lac mtb-1
+	jmp sr1
+	hlt	/no space for new objects
+	jmp sr5
+sr2,	lac (tcr	/set up torp calc
+	dac i sr1
+	law nob
+	add sr1
+	dap ss3
+	lio ‾stx
+ss3,	dio
+	add (nob
+	dap ss4
+	lio ‾sty
+ss4,	dio
+	add (nob
+	dap sr6
+	add (nob
+	dap sr7
+	add (nob
+	dap sr3
+	add (nob
+	dap sr4
+	lac ‾sn
+	xct tvl
+	cma
+
+
+
+
+
+
+
+
+
+
+
+
+
+	add i mdx
+sr3,	dac .
+	lac ‾cs
+	xct tvl
+	add i mdy
+sr4,	dac .
+	xct rlt
+	dac i ma1	/permit torp tubes to cool
+	xct tlf	/life of torpedo
+sr6,	dac .
+	lac (lac mtb nob-1
+	sub sr1
+	sal 3s
+	add (30
+sr7,	dap .	/length of torpedo calc
+sr5,	lac ‾scw
+	dac i mco
+	count i mh3, mb1
+	dzm i ‾mh3
+	lac ‾mh2
+	sza i
+	jmp mb1
+	lac ‾scw
+	spa
+	ral 1s
+	sma	/hyperspace button on?
+	jmp mb1	/no
+	lac i ml1
+	dac i ‾mh1
+	lac (hp1 400000
+	dac i ml1
+	xct hd1
+	dac i ma1
+	law 2
+	dac i mb1
+	jmp mb1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/here to handle spaceships dragged into star
+
+pof,	dzm i mdx
+	dzm i mdy
+	szs 50
+	jmp po1
+	lac (377777
+	dac i mx1
+	dac i my1
+	jmp mq1
+
+po1,	lac (mex 400000	/now go bang
+	dac i ml1
+	law i 10
+	dac i ma1
+	jmp mq1
+
+/here if a ship exploded or both ships out of torps
+
+mdn,	count ‾ntd, ml1	/wait awhile
+	stf 1
+	stf 2
+	law ss1
+	xor mtb
+	sza
+	clf 1
+	sza i
+	idx ‾1sc
+	law ss2
+	xor mtb 1
+	sza
+	clf 2
+	sza i
+	idx ‾2sc
+	clf 2
+	jmp a
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/pregame setup
+
+a1,	law mg2	/test word control
+	dac ‾cwg
+	jmp a7
+
+a40,	law mg1	/here from start at 4
+	dac ‾cwg
+a7,	law flex  q4
+	arq
+	hlt
+	cbs
+	esm
+	jmp a6
+
+a,	lac ‾gct
+	sma
+	jmp a5
+	count ‾gct, a5
+	lac ‾1sc
+	sas ‾2sc
+	jmp a4
+	law i 1
+	dac ‾gct
+a5,	lat
+	and (40
+	sza i
+	jmp a2
+a4,	lac ‾1sc
+	lio ‾2sc
+	hlt
+	lat
+	and (40
+	sza
+	jmp a2
+	dzm ‾1sc
+	dzm ‾2sc
+a6,	lat
+	rar 6s
+	and (37
+	sza
+	cma
+	dac ‾gct
+a2,	law mtb
+	dap . 1
+	dzm .
+	idx .-1
+	sas (dzm nnn
+	jmp .-3
+	law ss1
+	dac mtb
+	law ss2
+	dac mtb 1
+	lac (-200000
+	dac nx1
+
+
+
+
+
+
+
+	dac ny1
+	cma
+	dac nx1 1
+	dac ny1 1
+	lac (144420
+	dac nth 1
+	law nnn	/start of outline program
+	dac not
+	lio ddd
+	spi i
+	jmp a3
+	jda oc	/compile outline
+	ot1
+a3,	dac not 1
+	jda oc
+	ot2
+	xct tno
+	dac ntr
+	dac ntr 1
+	lac foo
+	dac nfu
+	dac nfu 1
+	law 2000
+	dac nb1
+	dac nb1 1
+	xct mhs
+	dac nh2
+	dac nh2 1
+	xct tlf
+	sal 1s
+	dac ‾ntd	/restart delay is 2×torp life
+	jmp ml0	/start new game
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/outlines of spaceships
+
+ot1,	111131
+	111111
+	111111
+	111163
+	311111
+	146111
+	111114
+	700000
+. 5/
+
+ot2,	013113
+	113111
+	116313
+	131111
+	161151
+	111633
+	365114
+	700000
+. 5/
+
+
+variables
+constants
+
+
+mtb,		/table of objects and their properties
+
+nx1=mtb nob
+ny1=nx1 nob
+na1=ny1 nob
+nb1=na1 nob
+ndx=nb1 nob
+ndy=ndx nob
+nom=ndy nob
+nth=nom 2
+nfu=nth 2
+ntr=nfu 2
+not=ntr 2
+nco=not 2
+nh1=nco 2
+nh2=nh1 2
+nh3=nh2 2
+nh4=nh3 2
+nnn=nh4 2
+
+start 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

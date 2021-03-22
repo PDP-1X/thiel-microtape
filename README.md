@@ -32,3 +32,6 @@ This data was provided by John Shriver on March 22, 2021.  He wrote:
 > tape, including a floating point package. It probably would be very
 > useful if anyone was ambitious enough to try and add a PDP-1X
 > simulator to SIMH, providing known working code.
+
+![](files/microtape%20box.jpg)
+![](files/microtape%20with%20listing.jpg)

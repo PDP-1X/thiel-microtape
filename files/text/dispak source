@@ -1,0 +1,726 @@
+/6.25 scope programs
+/modified 3/27/69 by D.W. Thiel
+/contains variable size characters, improved message
+/header
+6300/
+.knb,	0
+	jmp .knb1
+.but,	0
+	jmp .but1
+.swt,	0
+	jmp .swt1
+.sop,	0
+	jmp .sop1
+.sdp,	0
+	jmp .sdp1
+.cd,	0
+	jmp .cd1
+.cdx,	507000
+.cdy,	300000
+.lin,	0
+	jmp .lin1
+.tpn,	0
+	jmp .tpn1
+.pnt,	0
+	jmp .pnt1
+.save,	0
+	jmp .save1
+.rstor,	0
+	jmp .rstr1
+.txx,	jmp mes
+.size,	0
+	jmp siz
+
+/6.25 knob input routine
+/jdp .knb
+
+.knb1,	nam
+	xct i .knb
+	idx .knb
+	dap .kn1
+	lai
+	rar 8s
+	xor (add
+	sar 8s
+.kn1,	dac i 
+	idx .knb
+	jmp i .knb
+
+
+	repeat if2∧ifup 4,[printx /.knb=/	printo .knb	printx /
+/
+]
+
+
+
+/6.25 button input routine
+/jdp .but
+
+.but1,	nam
+	lac i .but
+	rbt
+	cma
+	rir 1s
+	ril 1s
+	SAA>
+	jmp .-2
+	spi i
+	idx .but
+	idx .but
+	jdp .rstor
+	jmp i .but
+
+
+
+	repeat if2∧ifup 4,[printx /.but=/	printo .but	printx /
+/
+]
+
+/6.25 switch input routine
+/jdp .swt
+
+.swt1,	nam
+	lac i .swt
+	rbt
+	cma
+	ril 8s
+	ril 1s
+	SAA>
+	jmp .-2
+	spi i
+	idx .swt
+	idx .swt
+	jdp .rstor
+	jmp i .swt
+
+	repeat if2∧ifup 4,[printx /.swt=/	printo .swt	printx /
+/
+]
+
+/save and restore mode to entered mode(indirect or indexed)
+.save1,	dio .io
+	dac .ac
+	TXXI
+	dio .xr‾
+	rpf
+	dio .f‾
+	jmp i .save
+
+
+.rstr1,	lio .f
+	lpf
+	lio .‾io
+	lac .‾ac
+	lxr .xr
+	jmp i .rstor
+
+
+	repeat if2∧ifup 4,[printx /.save =/	printo .save
+	printx /
+.rstor =/	printo .rstor
+	printx /
+/]
+
+
+/6.25 scope decimal and octal
+/jdp .sdp or jdp .sop
+
+.sop1,	lxr .sop
+	lio (10
+	jmp cpt
+
+.sdp1,	lxr .sdp
+	lio (10.
+cpt,	dio rad
+	dac ‾dpt
+	TXXA
+	dap dpx
+	dzm d‾p1
+dpl,	lac dpt
+	lio (54
+	spa
+	jdp sco
+	spa
+	cma 20
+	dac dpt
+dpa,	dac d‾p2
+	mul (1
+	div . 1
+rad,	12
+	sas dp1
+	jmp dpa
+	sni
+	lio dpa-2
+	jdp sco
+	lac dp2
+	dac dp1
+	sas dpt
+	jmp dpl
+dpx,	jmp .
+sco,	0
+	dac ‾t69
+	lai
+	jdp .cd
+	lac t69
+	jmp i sco
+
+	repeat if2∧ifup 4,[printx /.sop=/	printo .sop
+printx /
+.sdp=/	printo .sdp	printx /
+/
+]
+
+
+/character display (for 6.25)
+
+cd_=.cd	cdx_=.cdx	cdy_=.cdy
+.cd1,	and (77
+	sal 1
+	add cds
+	dap cd4-1
+	dzm siz4
+	law cd5-1
+	dap cd4
+	xct cd4-1
+	spa
+	jmp c9d
+cd1,	and (376000
+	TAXA
+	lio cdy
+cd2,	A+XX<
+	jmp cd3
+	lac cdx
+	dpy-i 200
+cd3,	lac siz1
+	A+II
+	lac (376000
+	A∧XXA=
+	jmp cd2
+	lac siz1
+	adm cdx
+	idx cd4
+	lac .
+cd4,	xct .
+	jmp cd1
+	idx cd4-1
+	xct cd4-1
+	rcr 4s
+	jmp cd1
+
+cd5,	ral 7s
+	TAI|
+	ral 3s
+	rar 8s
+	jmp cd6
+
+cd6,	lac siz2
+	adm cdx
+	lac siz4
+	adm cdy
+	jmp i cd
+
+cd7,	lac (77777	/tab
+	ior cdx
+	add siz6
+	dac cdx
+	jmp i cd
+
+
+cdc,	ZAP	/lower case
+	law 200	/upper case
+	add (cd9
+	dac cds
+	jmp i cd
+
+cds,	cd9
+
+c9d,	sas (add
+	jmp c8d
+	idx cd4-1
+	dap . 1
+	jmp .
+
+c8d,	lac siz3
+	dac siz4
+	cma
+	adm cdy
+	xct cd4-1
+	jmp cd1
+
+cd8,	lac siz5	/c.r.
+	adm cdy
+	lac (507000
+	dac cdx
+	jmp i cd
+
+ini,	lac (300000	/16 - initialize
+	dac cdy
+	jmp cd8+2
+
+siz1,	1000
+siz2,	2000
+siz3,	3000
+siz4,	0
+siz5,	-14000
+siz6,	7001
+
+
+cd9,	0	0	/space
+	27	740000	/1
+	305214	462306	/2
+	105014	462266	/3
+	36100	437610	/4
+	137114	462261	/5
+	175114	462262	/6
+	3610	441203	/7
+	155114	462266	/8
+	15114	452236	/9
+	add	jmp i cd
+	add	jmp i cd	/stop
+	51253	305010	/pointer
+	add	jmp i cd
+	add	jmp ini	/initialize
+	add	jmp i cd
+
+	175014	60276	/0
+	100200	401002	//
+	221245	211000	/s
+	10764	211000	/t
+	171004	37000	/u
+	70404	10034	/v
+	171003	20074	/w
+	210501	12104	/x
+	417104	417600	/y
+	211445	223104	/z
+	add	jmp i cd
+	500200	0	/,
+	add	jmp i cd
+	add	jmp i cd
+	add	jmp cd7	/tab
+	add	jmp i cd
+
+
+	0	400000	/
+	501004	217200	/j
+	376202	421000	/k
+	1774	0	/l
+	370047	401170	/m
+	370040	236000	/n
+	161044	216000	/o
+	776110	441400	/p
+	414110	477640	/q
+	370040	202000	/r
+	add	jmp i cd
+	add	jmp i cd
+	20100	402010	/-
+	1012	107000	/)
+	2010	40201	/‾
+	342	120200	/(
+
+	add	jmp i cd
+	161044	237100	/a
+	377104	414000	/b
+	161044	212000	/c
+	161044	237600	/d
+	161245	226000	/e
+	21760	440400	/f
+	415114	457600	/g
+	376100	434000	/h
+	7	500000	/i
+	add	jmp cdc
+	4	0	/.
+	add	jmp cdc 1
+	add	jmp i cd
+	add	jmp i cd
+	add	jmp cd8
+
+
+	0	0	/space
+	30	600	/"
+	0	140000	/'
+	4010	40401	/~
+	104422	110434	/⊃
+	70402	10034	/∨
+	70020	100434	/∧
+	20242	120200	/<
+	1012	105010	/>
+	10027	740404	/^
+	add	jmp i cd
+	add	jmp i cd	/stop
+	51253	305010	/pointer
+	add	jmp i cd
+	add	jmp ini	/initialize
+	add	jmp i cd
+
+	20102	507010	/→
+	4015	42206	/?
+	115114	462262	/S
+	2017	740201	/T
+	177004	20077	/U
+	76404	10037	/V
+	177003	20077	/W
+	306240	405143	/X
+	6047	401003	/Y
+	303214	461303	/Z
+	add	jmp i cd
+	50241	205024	/=
+	add	jmp i cd
+	add	jmp i cd
+	add	jmp cd7	/tab
+	add	jmp i cd
+
+
+	601004	20100	/_
+	101004	20077	/J
+	376101	210501	/K
+	377004	20100	/L
+	376020	200577	/M
+	376040	404177	/N
+	175014	60276	/O
+	376110	442206	/P
+	175015	50336	/Q
+	376111	452306	/R
+	add	jmp i cd
+	add	jmp i cd
+	20103	702010	/+
+	1014	77600	/]
+	7	740000	/|
+	1774	60200	/[
+
+	add	jmp i cd
+	370221	44574	/A
+	377114	462266	/B
+	175014	60242	/C
+	377014	60276	/D
+	377114	462301	/E
+	376110	442201	/F
+	175015	64262	/G
+	376100	402177	/H
+	1017	760200	/I
+	add	jmp cdc
+	104240	405042	/×
+	add	jmp cdc 1
+	add	jmp i cd
+	add	jmp i cd
+	add	jmp cd8
+	repeat if2∧ifup 4,[printx /.cd =/	printo .cd	printx /
+.cdx=/	printo .cdx	printx /
+.cdy=/	printo .cdy	printx /
+/
+]
+
+/variable size character option
+/ .W. Thiel     1/14/69
+
+siz,	TII>
+	lio (1
+	law i 300
+	A+I<
+	lio (300
+	sil 6s
+	dio siz1
+	lai
+	sil 1s
+	dio siz2
+	A+II
+	dio siz3
+	sil 1s
+	A+II
+	dio siz6
+	sal 1s
+	sil 1s
+	AMII
+	dio siz5
+	jmp i .size
+
+repeat if2∧ifup 4,[printx /.size=/	printo .size	printx /
+/]
+
+/6.25 line drawer with fixed window
+
+/Coordinates are right justified, up to 17 bit magnitude.
+/Coordinates are truncated down to magnitude _< 777 (size of scope face)
+/Goes to fgt in base mode if
+/no part of line is visible. Displays line once and goes to lg6 if
+/it is visible.
+
+.lin1,	dac x1
+	dio y1
+	nam
+	lac i .lin
+	dac x2
+	idx .lin
+	lio i .lin
+	dio y2
+	idx .lin
+sqn,	iam	/could be nam
+	law tab
+	dac ‾xr1
+sq0,	clf 6
+	lxr xr1
+	bam
+	law i 777
+	szf 6
+	cma
+	lia
+	add i 3
+	swp
+	add i 4
+	szf 6
+	cma∨cmi
+	TAAM|
+	cla
+	TIIM|
+	cli
+	A∨I<M
+	jmp fgt	/forget it, can't be seen
+	A∧I>P
+	jmp sq2	/no adjustment
+	spi
+	SXX|
+	swp
+	dac 11
+	AMIA
+	dac 12
+	lac i 4
+	sub i 3
+	mul 11
+	div 12
+	hlt
+	adm i 3
+	lac i 1
+	sub i 0
+	mul 11
+	div 12
+	hlt
+	adm i 0
+sq2,	iam
+	szf 6
+	jmp .+3
+	stf 6
+	jmp sq0+1
+	law 3
+	adm xr1
+	sas (tab+6
+	jmp sq0
+	lac x2
+	sub x1
+	sal 6s
+	lia
+	lac y2
+	sub y1
+	sal 6s
+	dac lg3
+	spa
+	cma
+	spi
+	AMIAX|
+	A+IAX
+	dac lg9
+	lai
+	scr 7s
+	div lg9
+	jmp lg4
+	dac lg7
+	lac lg3
+	scr 7s
+	div lg9
+lg3,	0
+	dac lg3
+	TXXA
+	sar 8s
+	CAX
+lg4,	lio y1
+	lac x1
+	rcl 8s
+lg5,	dpy-i 300
+	add lg7
+	swp
+	add lg3
+	swp
+	SXX>P
+	jmp lg5
+lg6,fgt,	nam
+	jmp i .lin
+
+lg7,	0
+lg9,	0
+x1,	0
+y1,	0
+x2,	0
+y2,	0
+
+tab,	x1	x2	x1
+	y1	y2	y1
+	x1	x2	x1
+. 6/
+
+
+	repeat if2∧ifup 4,[printx /.lin=/	printo .lin
+printx /
+/
+]
+
+
+/6.25 version of rst's find the pen
+/jdp .tpn , returns right justified x,y in ac,io
+tpn_=.tpn1
+.tpn1,	lac x
+	lio y
+	stf 3
+	jmp tp1
+tpl,	add in1
+	swp 3
+	add in2
+	swp
+tp1,	dpy-i 300	/insert nop before here for non-ts
+	szf 3
+	jmp tpl
+tpd,	sub x
+	sar 1
+	adm tx
+	lai
+	sub y
+	sar 1
+	adm ty
+	lac in1
+	lio in2
+	cma 3
+	dac in2
+	dio in1
+	spi∨spa i
+	jmp .tpn1
+	lac tx
+	lio ty
+	dac x
+	dio y
+	dpy 300
+	szf 3
+	jmp tpo
+fpl,	dpy-i 300
+	dac ‾tx
+	rar 1
+	xor (110371
+	add (110371
+	lia
+	rir 9s
+	szf i 3
+	jmp fpl
+fpd,	lac tx
+	lia
+	rir 9s
+	dac ‾x
+	dio ‾y
+	dio ‾ty
+	jmp tp1
+
+in1,	-1000
+in2,	-0
+
+tpo,	sir 8s
+	sar 8s
+	jmp i .tpn
+	repeat if2∧ifup 4,[printx /.tpn=/	printo .tpn	printx /
+/
+]
+
+/6.25 display a point
+
+.pnt1,	ral 8s
+	ril 8s
+	dpy -i 100
+	jmp i .pnt
+
+	repeat if2∧ifup 4,[printx /.pnt=/	printo .pnt
+printx /
+/
+]
+
+/new message routine    12/12/68    D. Thiel
+
+
+mes,	nam
+	dap txy
+	lio i txy
+	idx txy
+	lac (607600
+	rcl 6s
+	sad (760037
+txy,	jmp .
+	sad (760060
+	jmp mes 2
+	dio ‾txx1
+	jdp .cd
+	lio ‾txx1
+	jmp txy-3
+
+
+	repeat if2∧ifup 4,[printx /.txx=/	printo .txx
+	printx /
+/]
+
+/new trailer   12/12/68
+
+constants
+variables
+	repeat if2∧ifup 4,[printx /first free location =/
+	printo .
+	printx /
+/]
+	start
+
+jdp fad
+	*
+  1
+	negate
+	*e1am      	jda fop
+	tyo
+	*er1a)   
+
+*	jdp fdv
+	*
+  1
+	*1af   
+
+*	jdp fad
+	*
+  1
+	*1bu   
+
+	jdp .save
+	lac *	  1	sal 8s	dac .cdx
+	lio *	  2	sil 8s	dio .cdy
+	jdp .rstor
+	*er1br   
+
+	jdp .save
+	jdp .tpn
+	dac *  1	dio *  2
+	jdp .rstor
+	*1b.   
+
+*	jdp .save
+	lac *	  1	jdp .cd
+	jdp .rstor
+	*e1cs   
+
+	jdp .save
+	lac *
+  1
+	lio *
+l  2
+	jdp .pnt
+	jdp .rstor
+	*er1ce   
+
+.	jdp .save
+	lac *2  3	lio *  4	dac . 5	dio . 5
+	lac *1  1	lio *  2
+	jdp .lin
+	0	0
+	jdp .rstor
+	*1d8   
+
+*	jdp .save
+	lac *
+  12as

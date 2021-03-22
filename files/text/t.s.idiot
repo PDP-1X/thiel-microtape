@@ -1,0 +1,138 @@
+t. s. idiot
+
+.cc=0
+n1=105
+
+define print x
+repeat 1-ifp .cc-70, printx -x -
+repeat ifp .cc-70,[printx -
+x -	.cc=0]
+.cc=.cc+ccount -x-
+terminate
+
+define select length,list
+n1=[n1~131047]×add-131047
+a=[[n1∧377000]>4000]<length 1
+b=1
+irp x,list
+repeat ifz b-a,[x	stop]
+b=b+1
+endirp
+terminate
+
+define rwrite length,list
+n1=[n1~131047]×add-131047
+a=[[n1∧377000]>4000]<length 1
+b=1
+irp x,list
+repeat ifz b-a,print x	stop
+b=b+1
+endirp
+terminate
+
+define noun
+rwrite 68.,[man,beast,machine,god,sorceror,poet,thought,word,deed,worm,animal,mind,hand,eye,tree,grass,river,field,world,planet,brain,woman,plan,morning,star,mushroom,defeat,leaf,mud,sky,water,beach,death,earth,air,fire,life,child,king,queen,prince,emperor,fool,witch,spirit,house,castle,ship,cave,sand,wilderness,hill,mountain,valley,cloud,sun,moon,bird,love,hate,space,time,fear,wind,bell,book,candle,idiot]
+terminate
+
+define adjec
+rwrite 29.,[black,green,wet,dark,bright,silent,thundering,mindless,brown,raging,steel,cold,misty,painful,dying,crawling,early,crimson,blue,white,silver,gold,young,old,wise,foolish,evil,scheming,insidious]
+terminate
+
+define prepos
+rwrite 12.,[for,of,from,into,at,against,about,near,on,for lack of,in,inside]
+terminate
+
+define article
+rwrite 12.,[a,a,a,a,a,the,the,the,the,the,no]
+terminate
+
+define particle
+rwrite 12.,[the,the,the,the,the,no]
+terminate
+
+define iverb
+rwrite 23.,[dies,lives,shrinks,whimpers,speaks,screams,runs,hates,hurts,thinks,never thinks,rests,wonders,drifts,crawls,bleeds,cries,sleeps,wakes,weeps,roars,babbles,struggles]
+terminate
+
+define tverb
+rwrite 25.,[makes,kills,shrinks,dreams,plans,plots,fights,destroys,reflects,stands before,wants,devours,seeks,enshrouds,conquers,ignores,loves,drops,saves,overwhelms,follows,disrupts,rules,ruins,hates]
+terminate
+
+define pnoun
+rwrite 53.,[men,beasts,machines,gods,sorcerors,poets,thoughts,words,deeds,worms,animals,minds,hands,eyes,trees,grasses,rivers,fields,worlds,planets,brains,women,plans,stars,mornings,mushrooms,leaves,beaches,shores,clouds,forests,cities,roads,children,things,lives,kings,queens,princes,emperors,fools,witches,spirits,houses,ships,caves,sands,hills,mountains,valleys,clouds,birds,suns]
+terminate
+
+define pverb
+rwrite 23.,[die,live,shrink,whimper,speak,scream,run,hate,hurt,think,never think,rest,wonder,drift,crawl,bleed,lie,weep,roar,babble,struggle,sleep,wake,caress]
+terminate
+
+define ptverb
+rwrite 23.,[make,kill,shrink,want,plan,plot,fight,destroy,reflect,devour,stand before,seek,conquer,ignore,love,drop,save,overwhelm,follow,disrupt,rule,ruin,hate]
+terminate
+
+define conj
+rwrite 4,[and,but,if,while]
+terminate
+
+define mnoun
+select 2,[noun,[adjec	noun]]
+terminate
+
+define nounp
+select 3,[mnoun,mnoun,[mnoun	prepos	article	mnoun]]
+terminate
+
+define object
+select 3,[[particle	pnounp],[article	nounp],[article	nounp]]
+terminate
+
+define isent
+article
+nounp
+iverb
+terminate
+
+define tsent
+article
+nounp
+tverb
+object
+terminate
+
+define mpnoun
+select 2,[pnoun,[adjec	pnoun]]
+terminate
+
+define pnounp
+select 5,[mpnoun,mpnoun,mpnoun,[mpnoun	prepos	particle
+mpnoun],[mpnoun	prepos	article	mnoun]]
+terminate
+
+define psent
+particle
+pnounp
+pverb
+terminate
+
+define ptsent
+particle
+pnounp
+ptverb
+object
+terminate
+
+define dsent
+select 4,[tsent,isent,psent,ptsent]
+printx -, -
+conj
+select 4,[tsent,isent,psent,ptsent]
+terminate
+
+define idiocy
+.cc=0
+select 14.,[isent,isent,isent,isent,tsent,tsent,tsent,tsent,dsent,dsent,psent,psent,ptsent,ptsent]
+printx -.
+-
+terminate
+
+start

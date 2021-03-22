@@ -1,0 +1,1115 @@
+
+orbit 2
+
+3/brk,	jmp sb
+4/	jmp in
+
+grc,	scr 2s	/gravity constant
+rc,	4000	/rotation constant
+acc,	1400	/acceleration constant
+tcr,	5000	/collision radius
+clt,	-120	/torpedo collision life
+cln,	-2000	/torpedo collision life nuclear
+cls,	-2000	/ship collision life
+ran,	253142	/random number
+trt,	-1000	/torpedo recharge time
+sco,	4000	/solar collision radius
+hdt,	-4000	/hyperspace dormant time
+hbt,	-4000	/hyperspace breakout time
+hyv,	1000	/hyperspacially induced velocity
+hun,	6	/hyperspacial uncertainty
+hrt,	-10000	/hyperspace recharge time
+grt,	-10000	/game reset time
+tlf,	-10000	/torpedo life
+tve,	1600	/torpedo velocity
+ds,	600	/ship size
+tnu,	-50	/number of torpedos
+ful,	-100000	/amount of fuel
+clh,	-4000	/collision life from hyperspace
+
+
+/gravity calculation
+
+grv,	0
+	lac r
+	spa
+	jmp i grv	/ship is exploding
+	lac x
+	mul x
+	scr 2s
+	scl 1
+	dac ‾r2a
+	rir 1
+	dio ‾r2b
+	lac y
+	mul y
+	scr 2s
+	scl 1
+	adm r2a
+	swp
+	rar 1
+	adm r2b
+	sma
+	jmp . 4
+	lac (add-1
+	adm r2b
+	idx r2a
+sr,	lac r2a
+	lio r2b
+	ril 1
+	div r
+	lac (add-1
+	swp
+	lxr r
+	I+XA
+	rar 1
+	and (add-1
+	dac r
+	XMIX<
+	CXX
+	SX>=
+	jmp sr
+q2,	sub sco	/solar collision radius
+	spa
+	idx grv	/hit sun
+q,	ZX
+	lac r2a
+	lio r2b
+	ril 1
+ne,	spa
+	jmp ng
+	rcl 1
+	SXX
+	jmp ne
+ng,	rcr 1
+	dac ‾sg
+	lac (-132403
+	cli
+	div sg
+	hlt
+	dac ‾fr
+	mul x
+	div r
+	hlt
+	dac ‾fx
+	lac fr
+	mul y
+	div r
+	hlt
+	dac ‾fy
+	lio (add
+	CXX|
+	sir 1
+	SXX>=
+	jmp .-2
+	cla
+	rcl 9s
+	ior (scl
+	dac sh1
+	cla
+	rcl 9s
+	ior (scl
+	dac sh2
+	lac fx
+	mul dt
+	scr 9s
+sh1,	0
+sh2,	0
+	xct grc
+	lxr (x
+	jdp dpa
+	lac fy
+	mul dt
+	scr 9s
+	xct sh1
+	xct sh2
+	xct grc
+	SXX
+	jdp dpa
+	jmp i grv
+
+
+/start
+
+in,	iam
+	lsm
+	law 5004
+	arq
+	bpt
+	tyi
+	law 4
+	AMI<
+	sni
+	jmp .-4
+	clc 60
+	tyo
+	dac ‾nsh
+	sub (4
+	sar 1
+	sal 2s
+	add (14
+	lia
+	law 62
+	arq
+	bpt
+	cac
+	cbs
+	asc 100
+	iot 610
+	esm
+	lac ds
+	sal 3s
+	dac ‾8ss
+	lac nsh
+	mul (l
+	law tor
+	AMIA
+	dac ‾bes	/beginning of object storage
+
+/initialization
+
+ini,	law l2
+	mul nsh
+	rir 1
+	law pd1 l2
+	AMIA
+	dac ‾snp	/address of first private block
+	dac ‾sn
+inb,	TAX
+	jdp ins
+	law l2
+	adm sn
+	sas (pd1 l2
+	jmp inb
+	lxr (s4-tor
+	dzm i tor
+	SXX=
+	jmp .-2
+	law tor
+	dap ‾eot
+	lac (lac
+	dac pd2 12
+	dac pd2 13
+	dac pd3 12
+	dac pd4 13
+	cma
+	dac pd1 12
+	dac pd1 13
+	dac pd3 13
+	dac pd4 12
+
+/main loop (gravity, buttons, and display)
+
+mvs,	lac dt
+	sar 6s
+	dac ‾dts
+	lac rc
+	mul dt
+	scl 7s
+	dac ‾rcf
+	lac snp
+	dac sn
+mvn,	TAX
+	jdp rsc
+	law l-1
+	A+XA
+	dap mv1
+	dap mv2
+	lxr (-l 1
+mv1,	lac i
+	dac i gb l-1
+	SXX=
+	jmp .-3
+	lxr sn
+	jdp ssc
+	lac i 17
+	jdp osh
+	lxr sn
+	cli
+	xct i 0
+	skp i
+	jdp rdb	/get buttons
+	jdp bud
+	lxr sn
+	xct i 0
+	jmp mvt
+	skp i 60
+	jdp grv
+	jmp mvt
+	lxr sn
+	law 600	/hit sun
+	dap i 0
+	lac cls
+	dac r
+mvt,	lxr (-l 1
+	lac i gb l-1
+mv2,	dac i
+	SXX=
+	jmp .-3
+	lxr sn
+	lac i 16
+	spa
+	add dts
+	dac i 16
+	lac i 7
+	spa
+	add dts
+	dac i 7
+	xct i 0
+	jmp . 3
+	lxr i 10
+	jdp udp
+	lxr sn
+	jdp fsc
+	law l2
+	adm sn
+	sas (pd1 l2
+	jmp mvn
+
+
+/sun display
+
+sds,	jdp rnu
+	TAX
+	cla∨cli
+	iot 7
+	law 3777
+	A∧XA
+	TX<
+	lia
+	iot 7
+	cma 60
+	iot 7
+	cma 60
+	iot 7
+	cma 60
+	iot 7
+
+/move and display torpedos
+
+dyt,	lxr (tor-l
+	law l
+	X+AXA
+dyu,	sad eot
+	jmp dye 1
+	lac i 6
+	spa
+	jmp tex	/exploding
+	jdp udp
+	lio i 1
+	iot 107
+	lac dts	/dt, shifted down 6s
+	adm i 7
+	spa
+	jmp . 3
+ttl,	law i 140	/torpedo time-out life
+	dac i 6
+	skp 20
+	jmp dyt 1
+	law l-1	/gravity on torpedos'.
+	A+XA
+	dap . 3
+	dap dyy
+	lxr (-l 1
+	lac i
+	dac i gb l-1
+	SXX=
+	jmp .-3
+	jdp grv
+	jmp . 5
+	lac clt	/hit sun
+	szs 30
+	lac cln	/nuclear collision
+	dac r
+	lxr (-l 3
+	lac i gb l-1
+dyy,	dac i
+	SXX=
+	jmp .-3
+	law 7777
+	and dyy
+	SAAX
+	jmp dyu
+
+tex,	lac (sar 2s	/radius of torpedo explosion
+	jdp exp
+	lac dts
+	adm i 6
+	spa
+	jmp dyt 1
+	law i l	/torpedo must be removed from list
+	adm eot
+	XMAA<
+	jmp dye-1
+	cma
+	dap dyl
+	cla
+	dap dym
+dyl,	lac i
+dym,	dac i
+	idx dyl
+	idx dym
+	sas (dac i l
+	jmp dyl
+	TXXA
+dye,	jmp dyu
+
+
+/collision testing
+
+col,	lac bes
+	dac ‾clm
+com,	lxr clm
+	lac i 6	/r
+	sma
+	jmp . 3
+	skp 30
+	jmp con	/exploding
+	dac ‾tr1
+	lac i 0	/x
+	dac x
+	lac i 1	/y
+	dac y
+coo,	law l
+	A+XAX
+	sad eot	/end of object table
+	jmp con
+	lac i 6	/r
+	sma
+	jmp . 3
+	skp i 30
+	jmp coo	/not really there
+	lac i 0
+	sub x
+	div tcr
+	jmp coo
+	lac i 1
+	sub y
+	div tcr
+	jmp coo
+	lac i 6
+	and tr1
+	spa
+	jmp coo	/both already exploding
+	lac i 6
+	ior tr1
+	dac tr1
+	law tor	/collided
+	lio clt
+	szs 30
+	lio cln	/nuclear torpedo
+	XMA>=
+	jdp blm
+	dio i 6
+	lxr clm
+	law tor
+	lio clt
+	szs 30
+	lio cln
+	XMA>=
+	jdp blm
+	dio i 6
+con,	law l
+	adm clm
+	sas eot
+	jmp com
+
+
+/dt fudging
+
+dtf,	lac dtc
+	dzm dtc
+	dac ‾dt
+
+/end of game check
+
+eog,	dzm ‾en
+	dzm ‾et
+	lxr snp
+eoj,	xct i 14
+	jmp eok
+	idx en
+	lac i 5
+	adm et
+eok,	law l2
+	A+XAX
+	sas (pd1 l2
+	jmp eoj
+	lio en
+	law 1
+	AMI<
+	jmp end
+	lac et
+	TA=
+	jmp eoh 1
+end,	lac ‾fc
+	lio grt
+	sma
+	lai
+	add dts
+	dac fc
+	sma
+eoh,	jmp ini
+
+jmp mvs
+
+/sequence breaks
+
+sb,	law 200
+	adm ‾dtc
+	lac 0
+	lio 2
+	iot 610
+	jmp i 1
+
+
+/orient and display ship
+
+osh,	0
+	TXXI
+	dio ‾bar
+	xct i 0	/hyperspace
+	jmp hsp
+	dap osk
+	lac i 1	/angular velocity
+	adm i 11	/theta
+	skp i 10
+	dzm i 1
+	lac i 3	/sine
+	mul ds
+	dac rt 3
+	dac rt 13
+	cma 21
+	dac rt 7
+	xct i 2
+	stf 1
+	lac i 4	/cosine
+	CIX
+	mul ds
+	dac rt 5
+	cma
+	dac rt 1
+	dac rt 11
+	XMAI
+	dio rt 4
+	dio rt 14
+	cmi
+	dio rt
+	dio rt 10
+	X+AI
+	dio rt 2
+	dio rt 12
+	cmi 2
+	dio rt 6
+	skp i 1
+	jmp osf
+	lxr (gb	/ship is accelerating
+	lac rt 7
+	mul dt
+	scl 7s
+	mul acc	/acceleration constant
+	jdp dpa
+	SXX
+	lac rt 5
+	mul dt
+	scl 7s
+	mul acc
+	jdp dpa
+osf,	law rt 3
+	dap osy
+	law rt 5
+	dap osx
+
+osk,	law
+	dap osm
+	lio x
+	lac y
+
+osm,	lxr
+	TXX>P
+	jmp osl
+	skp 2
+	CXX
+osy,	add i
+	swp
+osx,	add i
+	iot 7
+	TAX
+	idx osm
+	X→IA
+	jmp osm
+
+osl,	skp 2
+	jmp osn
+	law rt 7
+	dap osy
+	law rt 11
+	dap osx
+	stf 2
+	jmp osk
+
+osn,	skp i 1
+	jmp osp
+	lxr bar
+	law i 7777	/ship is accelerating
+	ior ran
+	sub 8ss	/8 times size parameter
+	dac ‾foo
+	mul i 3	/sine
+	dac fx
+	lac foo
+	mul i 4	/cosine
+	lio fx
+	add y
+	cmi 60
+	add x
+	iot 7	/display exhaust
+osp,	lxr bar
+	law 10
+	add tcr	/collision radius
+	mul i 3
+	dac i 12	/cox
+	law 10
+	add tcr
+	mul i 4
+	dac i 13	/coy
+	jmp i osh
+
+
+/button dispatch
+
+bud,	0
+	lac rcf	/dt-fixed rotation constant
+	skp 10
+	sar 6s
+	spi
+	adm i 1	/av1
+	cma
+	ril 1
+	spi i
+	jmp . 5
+	adm i 1
+	law 1
+	A∧I=
+	jmp hyp
+	cla
+	dap i 2
+	ril 1
+	lac i 6
+	spa∨spi i
+	jmp bun
+	add dts
+	dac i 6
+	law 600
+	dap i 2
+bun,	ril 1
+	spi
+	jmp gto
+	jmp i bud
+
+/sine cosine dispatch
+
+ssc,	0
+	lac i 11	/orientation
+	jda sin
+	dac i 3	/sine
+	lac i 11
+	jda cos
+	dac i 4	/cosine
+	jmp i ssc
+
+
+/update object positions
+
+udp,	0
+	lac i 3	/dy
+	mul dt
+	scl 6s
+	adm i 1	/y
+	lac i 2	/dx
+	mul dt
+	scl 6s
+	adm i 0	/x
+	jmp i udp
+
+/double-precision add
+
+dpa,	0
+	scr 1
+	scl 1
+	rir 1
+	adm i 2
+	lac i 4
+	A+IA
+	dac i 4
+	sma
+	jmp i dpa
+	and (add-1
+	dac i 4
+	law 1
+	spi
+	law i 1
+	adm i 2
+	jmp i dpa
+
+/explosions
+
+exp,	0
+	dac exc	/size
+	add (1000
+	dac exc 1
+	law i 14	/number of points
+	dac foo
+exb,	lio ran	/random number
+	law 177
+	A∧IA
+	ior (scl
+	dac exa
+	rir 1
+	lac (256051
+	A~II
+	A+IA
+	dac ran
+	scr 9s
+	sir 9s
+exa,	0
+exc,	0
+	0
+	add i 1	/y
+	swp
+	add i 0	/x
+	iot 307
+	isp foo
+	jmp exb
+	jmp i exp
+
+
+/set up ship collision points
+
+fsc,	0
+	TXXA
+	dac foo
+	lac i 12	/cox
+	lio i 13	/coy
+	dac dx
+	dio dy
+	lxr i 10	/object block
+	lac i 0	/x
+	dac x
+	lio i 1	/y
+	dio y
+	add dx
+	dac i 0
+	swp
+	add dy
+	dac i 1
+	lio i 6	/r
+	law l
+	A+XX
+	dio i 6
+	lac x
+	sub dx
+	dac i 0
+	lac y
+	lia
+	sub dy
+	dac i 1
+	lxr foo
+	lac x
+	dac i 12
+	dio i 13
+	jmp i fsc
+
+/restore ship x and y
+
+rsc,	0
+	lac i 12
+	lio i 13
+	lxr i 10
+	dac i 0
+	dio i 1
+	jmp i rsc
+
+/blam
+
+blm,	0
+	lac tr1
+	spa
+	szs 40
+	jmp . 3
+	idx blm
+	jmp i blm
+	law s4
+	XMAA
+	mul (1
+	div (l
+	hlt
+	sar 1
+	mul (l2
+	sir 1
+	law pd4
+	A+IX	/find private data block
+	lio cls
+	xct i 0
+	lio clh
+	law 600
+	dap i 0	/exploding
+	lxr i 10	/back to object block
+	jmp i blm
+
+/random numbers
+
+rnu,	0
+	lio ran
+	lac (514263
+	A~II
+	A+IA
+	rcl 7s
+	dac ran
+	jmp i rnu
+
+/generate torpedo
+
+gto,	lac i 7	/recharge time left
+	spa
+	jmp i bud	/not yet
+	lac i 5
+	sma
+	jmp i bud	/all gone
+	idx i 5
+	lac trt	/initial recharge time
+	dac i 7
+	lac i 3
+	cma
+	dac fy	/sine
+	lac i 4
+	dac fx	/cosine
+	lxr eot
+	law l
+	adm eot
+	lac x
+	dac i 0
+	lac y
+	dac i 1
+	lac dx
+	dac i 2
+	lac dy
+	dac i 3
+	lac r
+	dac i 6
+	lac tlf
+	dac i 7	/life
+	law 4
+	add tcr	/gives torpedo lead on ship
+	sal 1
+	mul fy
+	adm i 0
+	law 4
+	add tcr
+	sal 1
+	mul fx
+	adm i 1
+	lac tve
+	mul fy
+	adm i 2
+	lac tve
+	mul fx
+	adm i 3
+	jmp i bud
+
+/hyperspace entry
+
+hyp,	lac i 16	/recharge time left
+	spa
+	jmp i bud	/not yet
+	law 600
+	dap i 0	/hyperspace flag
+	lac hbt	/breakout time
+	add hdt	/dormant time
+	dac i 15	/hyb
+	jdp rnu	/random number
+	dac i 11	/orientation
+	jdp rnu
+	dac x
+	jdp rnu
+	dac y
+	jdp rnu
+	mul hyv	/hyperspacial velocity constant
+	dac dx
+	lai
+	mul hyv
+	dac dy
+	jmp i bud
+
+/hyperspace and collision processing
+
+hsp,	xct i 14
+	jmp i osh	/ship doesn't exist
+hsb,	lio r
+	lac dts
+	spi i
+	jmp hsa
+	adm r	/exploding
+	spa
+	jmp hsg
+	law 600	/finished exploding
+	dap i 14	/no longer exists
+	dzm i 5
+	law i 1
+	dac r
+hsg,	lxr (gb
+	lio (skp i
+	lac i 6
+	sub cls
+	spa
+	lio (sal 1
+	lai
+	jdp exp
+	jmp i osh
+hsa,	adm i 15	/hyb
+	spa
+	jmp hsc
+	jdp rnu	/not in hyperspace any more
+	cla
+	div hun	/uncertainty
+	hlt
+	sni i
+	jmp hsd
+	lac cls	/too bad
+	dac r
+	jmp osz
+hsd,	cla
+	dap i 0	/made it
+	lac hrt	/recharge time
+	dac i 16
+	jmp osz
+hsc,	sub hbt
+	spa
+	jmp osz	/dormant
+	lac x	/breaking out
+	lio y
+	iot 107	/show it as a point
+osz,	lxr bar
+	dzm i 12
+	law 10
+	add tcr
+	dac i 13
+	jmp i osh
+
+/initialization dispatch
+
+ins,	0
+	lio i 21
+	dio i 11
+	dzm i 1
+	dzm i 7
+	dzm i 16
+	lac (skp i
+	dac i 0
+	dac i 2
+	dac i 14
+	lac tnu
+	dac i 5
+	lac ful
+	dac i 6
+	jmp i ins
+
+/read buttons
+
+rdb,	0
+	lac i 20
+	dap . 1
+	jmp
+b1,	rbt 100
+	jmp i rdb
+b2,	rbt 100
+	ril 5s
+	jmp i rdb
+b3,	rbt 400
+	rcl 4s
+	ril 1
+	rcr 2s
+	jmp i rdb
+b4,	lat 1060
+	jmp i rdb
+
+
+/sine cosine routine
+
+sin,	0
+	dap six
+	lac sin
+	jmp coa
+cos,	0
+	dap six
+	lac (lac
+	add cos
+	dac sin
+coa,	add six-4
+	ral 4s
+	and sic 3
+	add sic 2
+	dap sob
+	lac sin
+sob,	jmp
+sic,	jdp sow
+	jmp six
+	sic
+	14
+	sub (lac
+	jdp cow
+	jmp six
+	xct
+	sub (add
+	jdp sow
+	cma
+six,	jmp
+	sub (jmp
+	jdp cow
+	jmp six-1
+sow,	0
+	dac sin
+	mul sin
+	dac cos
+	sar 2s
+	sub (205044
+	mul (237010
+	mul cos
+	scl 2s
+	add (311040
+	mul sin
+	scl 2s
+	jmp i sow
+cow,	0
+	dac sin
+	mul sin
+	scl 3s
+	dac cos
+	sar 4s
+	sub (240573
+	mul (373257
+	mul cos
+	add (377777
+	jmp i cow
+
+
+/tables and constants
+
+constants
+variables
+gb,x,	0
+y,	0
+dx,	0
+dy,	0
+dxb,	0
+dyb,	0
+r,	0
+
+m1,	/ship outline 1
+5	6	6	6	6
+6	6	5	5	2
+2	2	2	2	2
+1	1	2	2	2
+2	2	2	2	2
+2	1	2	-1
+
+m2,	/ditto ship 2
+5	4	4	6	7
+7	7	3	5	5
+5	2	2	2	2
+2	1	3	2	2
+1	1	1	2	1
+2	-1
+
+m3,	/ditto ship 3
+4	6	6	6	0
+6	6	6	6	4
+2	4	3	4	2
+2	2	1	2	2
+2	1	1	2	2
+2	2	0	2	-1
+
+m4,	/ditto ship 4
+5	5	7	0	6
+4	2	4	5	6
+6	5	5	0	0
+3	1	2	2	1
+2	3	2	2	2
+1	2	2	2	1
+1	2	-1
+
+rt,	rt 15/
+
+/ship private blocks
+
+/0	skp i	/hyperspace and exploding
+/1	0	/angular velocity
+/2	skp i	/acceleration
+/3	0	/sine
+/4	0	/cosine
+/5	-50	/torpedoes left
+/6	0	/fuel left
+/7	0	/torpedo recharge time left
+/10	s1	/address of object block
+/11	0	/orientation
+/12	0	/collision center offset x
+/13	0	/ditto y
+/14	skp i	/nonexistant
+/15	0	/hyperspace breakout time left
+/16	0	/hyperspace recharge time left
+/17	m1	/shape
+/20	b1	/button routine
+/21	0	/initial orientation
+l2_=22
+
+define pblock a,c
+pd'a,	repeat 10,0
+	s'a
+	repeat 6,0
+	m'a
+	b'a
+	c
+termin
+
+pblock 4,jmp
+pblock 3,lac
+pblock 2,add
+pblock 1,0
+
+
+/object table
+
+/0	lac	/x
+/1	lac	/y
+/2	0	/dx
+/3	0	/dy
+/4	0	/dx low 17 bits
+/5	0	/ditto dy
+/6	0	/r
+/7	0	/life (for torpedoes)
+
+l_=10
+
+s4,	s4 l/
+s4a,	s4a l/
+
+s3,	s3 l/
+s3a,	s3a l/
+
+s2,	s2 l/
+s2a,	s2a l/
+
+s1,	s1 l/
+s1a,	s1a l/
+
+tor,
+
+start in
+
+,	s1a l/
+
+tor,
+
+start in
+
+                                                                                                                                                                                                                                                                                                                                                                                 35i

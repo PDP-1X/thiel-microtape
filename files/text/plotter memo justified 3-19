@@ -1,0 +1,169 @@
+                          PLOTTER 
+
+         A program to plot functions on the display 
+
+
+
+   Plotter  is a program that  will accept arithmetic state-
+ments typed in on the on-line typewriter, compile them,  and
+then  use  the  code  generated  to  compute  values  of the
+expression and display these values on the scope.  In  these
+expressions,  x is the independent variable most often used.
+O (for theta) can also be used as the independent  variable.
+x  varies between -10 and 10  decimal.  O varies between -pi
+and pi.
+
+   Expressions are typed in the following format:
+
+   expression, Comma is the  character used to terminate  an
+expression.   When the expression is typed and followed by a
+comma, compilation and calculation begin immediately.   Dis-
+play of the reslts also begins immediately.
+
+   The  format of  the expressions that  may be  typed is an
+expansion of  the expression  format used  in FORTRAN.   The
+acceptable arithmetic operators are +,-,/,×,and ^ where each
+of these has its normal FORTRAN meaning.  All operations are
+done  in floating point.  As has been stated x and O are the
+permissible dependent variables.  Constants may also be used
+in  expressions.   These are  normal FORTRAN  floating point
+constants with the limitation that the E notation may not be
+used.  Left and right parenthesis are used to group items in
+the expression.
+   Exponentiation to an integer power is done by writing the
+variable  or expression that  is to be  raised to an integer
+power and following it directly with the integer power.  The
+expression  must  of  course  be  enclosed  in  parenthesis.
+EXAMPLE:    x2    or    (3+x/5)3    or    (3+x2)3      These
+examples  are x squared, the cube of three plus one fifth x,
+etc.
+   Errors result in the printing  of a question mark or  err
+depending  on which  section of the  plotter program detects
+them.  Automatic recovery is effected for almost all  errors
+that it is possible to make.
+   New  input may  be typed  in while  the last  function is
+still displaying or immediately  after being informed of  an
+error  in the last input string.   There is no mechanism for
+correcting typing  errors.  A  backspace will  result in  an
+immediate  error  and terminate  a string  and allow  you to
+start over.  Carriage returns  and spaces serve to  separate
+items (e.g.  they can not appear within names -- si n(x), is
+illegal) but otherwise they are ignored.
+   Several functions are  available in  plotter.  These  in-
+clude:
+
+sin       sine
+cos       cosine
+
+tan       tangent
+tan       arc tangent
+asin      arc sine
+acos      arc cosine
+exp       exponential
+log       natural logarithm
+sqrt      square root
+root      square root
+bs       absolute value
+u         unit step  (0 if arg < 0, 1 otherwise)
+j0        bessel function of order 0
+          bessel function of order 1
+j2        bessel function of order 2
+gamma     gamma function
+ran       random number function (argument optional)
+zero      returns 0.0 for all arguments
+phi       phi function (argument optional)
+E         elliptic integral E
+K         elliptic integral K
+k1        reads value of knob 1 -- leftmost knob  (argument optional)
+k2        reads value of knob 2  (argument optional)
+k3        reads value of knob 3  (argument optional)
+k4        reads value of knob 4  (argument optional)
+fop       types value of argument, function value is the same as the 
+             argument value
+fip       reads in a number from the typewriter, then returns this
+             value  (argument optional)
+f1g       returns the value stored in array 1 at the position 
+             corresponding to this step of the calculation
+             (argument optional)
+f2g       returns the value stored in array 2
+f3g       returns the value stored in array 3
+f4g       returns the value stored in array 4
+f1p       stores its argument in array 1 in the position 
+             corresponding to this calculation
+f2p       stores its argument in array 2
+f3p       stores its argument in array 3
+f4p       stores its argument in array 4
+I         I sums and scales successive values of its argument,
+             thereby forming the approximate integral of its
+             argument
+D         D finds the difference between successive values of its
+             argument, scales this difference, and returns this
+             value which is the approximate derivative
+
+
+   The  arrays used by  f1g,f2g,f3g,f4g,f1p,f2p,f3p, and f4p
+have only the location corresponding to the nth step of  the
+computation  accessible at the  time of the  nth step of the
+computation.  That is, values stored will be available  only
+at  the corresponding step in  another calculation or in the
+same step of the same calculation.
+
+   There are also five  variables za,ab,zc,zd, and ze  which
+can be used to store results.  Each of these is a scalar and
+is accessible at any time.   These can be used to  eliminate
+
+the necessity of computing some commonly used sub-expression
+more than once. These variables have values assigned to them
+by  the use  of the operator  =.  The operator  = will group
+terms to the right until the first unbalanced ) is  reached.
+EXAMPLE:  3+(za=exp(x))+za3-(za+4)×sin(x)
+   This is equivalent to: x+exp(x)+exp(x)3-sin(x)×(exp(x)+4)
+The  special  integer  exponentiation   may  be  used   with
+functions as with expressions.
+
+   The  six sense switches  perform the following functions.
+
+
+SS1     If up, adjacent points of the display are connected by lines
+SS2     When up, terminates calculation
+SS3     When up, inhibits display - waits on tyi if there is
+             no calculation to do
+SS4     When up, calculation is continuous-when end of screen is reached
+             calculation restarts at left--integral function is not reset
+SS5     When up, the entirety of all selected arrays are displayed, otherwise
+             only those portions that have been calculated by the current
+             calculation are displayed
+SS6     When down, the functions fip and fop are inhibited from doing their
+             input-output function
+
+
+   The display is also controlled from the main  button-knob
+console.   The  first switch  at the  top left  controls the
+display of a grid--up for on. The next four switches control
+the  display of  arrays 1  through 4--up  for on.   The last
+switch (top right) is normally  up.  When it is down,  array
+four is used as the abcissa.  Thus, parametric functions may
+be displayed.  (Lissajous figures, etc.)
+
+   When the knobs  are used  for input, they  return a  vaue
+between  0.0 and 1.0.  The ordinate  has a range of -10.0 to
+10.0, the  same as  the  abcissa in  normal  (nonparametric)
+display mode.
+
+   When  any term of an  expression is undefined, the entire
+expression is undefined  and no value  will be displayed  at
+undefined  points.  Points that  are off the  screen are not
+displayed.
+
+   This program is  started by  loading it into  core 0  and
+starting it at location 0 or 4. Plotter requires that core 1
+be available.
+
+                                             David W.  Thiel
+                                          3/18/69
+
+at location 0 or 4. Plotter requires that core 1
+be available.
+
+                                             David W.  Thiel
+                     2**

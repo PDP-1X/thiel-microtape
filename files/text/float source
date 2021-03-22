@@ -1,0 +1,1164 @@
+/6.273 floating point package
+/10/13/70  D. Thiel
+
+/header
+6000/
+
+
+.fop,	0
+	dac fopst
+	lac .fop
+	dap fop2
+	lac fopst
+	dio fopst 1
+	jdp fixa
+	jda fop
+fop2,	xct .-.
+	jdp fixb
+	idx .fop
+	lac fopst
+	lio fopst 1
+	jmp i .fop
+
+fopst,	0	0
+
+
+.fip,	0
+	lac .-1
+	dap fip2
+	idx .-3
+	jdp fixa
+	jsp fip
+fip2,	xct .-.
+	jdp fixb
+	jmp i .fip
+
+.sin,	0
+	jdp fixa
+	jdp sin
+	jdp fixb
+	jmp i .sin
+
+.cos,	0
+	jdp fixa
+	jdp cos
+	jdp fixb
+	jmp i .cos
+
+.fadd,	fad
+.fmul,	fmp
+.fdiv,	fdv
+.frti,	ixp
+.frtr,	fxp
+.fzero=zero
+.fone=one
+.ftwo=two
+.fthre=three
+.ffour=four
+.ften=ten
+.fhun=hun
+.fpi=pi
+.f2pi=2pi
+.fpi2=pi2
+.fmin1=m1
+.fmin2=m2
+.fhalf=haf
+.fpt1=pt1	/0.1
+.fpt01=p01	/0.01
+.frt2=rt2	/square root of 2
+.fln,	0
+	jdp fixa
+	jdp fln
+	jdp fixb
+	jmp i .fln
+
+.flog,	0
+	jdp fixa
+	jdp fln
+	jdp fmp
+	ln10
+	jdp fixb
+	jmp i .flog
+
+ln10,	177736	267543
+
+.fsqrt,	0 
+	jdp fixa
+	jdp fsr
+	jdp fixb
+	jmp i .fsqrt
+
+.fexp,	0
+	jdp fixa
+	jdp exp
+	jdp fixb
+	jmp i .fexp
+
+.fix,	0
+	jdp fixa
+	jdp fix
+	0
+	jdp fixb
+	jmp i .fix
+
+.float,	0
+	jdp fixa
+	jdp flo
+	jdp fixb
+	jmp i .float
+
+
+define	prtr1 x
+	printx /x=/
+	printo x
+	printx /
+/
+	terminate
+define	prtr x
+	irp w,x
+	prtr1 w
+	terminate
+	terminate
+
+
+	repeat if2∧ifup 4,[
+	prtr [.sin,.cos]
+	prtr [.fpi2,.fmin1,.fmin2,.fhalf,.fpt1,.fpt01,.fzero]
+
+	prtr [.fone,.ftwo,.fthre,.ffour,.ften,.fpi,.f2pi,.fhun]
+	prtr [.fmul,.fdiv,.fadd,.fln,.flog,.fsqrt,.fexp,.fix,.float]
+	prtr [.fixa,.fixb,.frtr,.frti,.fip,.fop]
+	]
+
+/save routine to enter iam for floating point routines
+/saves flags and address mode while in floating point routines
+
+
+fixa,	0
+	dio iosav1‾
+	rpf
+	dio flag1‾
+	iam
+	lio iosav1
+	jmp i fixa
+.fixa=fixa
+
+
+
+fixb,	0
+	dio iosav1
+	lio flag1
+	lpf
+	lio iosav1
+	jmp i fixb
+
+.fixb=fixb
+
+
+/floating pack 3 june 1969
+
+/normalize
+/190+20N usec, N = number of steps
+
+fnm,	0
+	dac fmp
+	X→AX
+	dac fxr
+	lac fnm
+	dac fad
+	TXXA<M
+	cma
+	sar 8s
+	sub (1	/-exp-1
+	X→AX
+	spa
+	cma∨cmi
+	scl 9s
+	A∨IP|
+	ZXP
+	SXX<M
+	jmp .+5
+	rcl 1s
+	sma
+	jmp .-4
+	rcr 1s
+	CXX
+	scr 9s
+	X→AX
+	dac ft7	/fdv will need this
+	jmp fd8
+
+
+/fix
+/195 usec
+
+fix,	0
+	dio fmp
+	TAAI>P
+fx1,	cma
+	sar 8s
+	aam
+	sub fix
+	sub (421
+	szm
+	cla
+	add (43
+	spa
+	cla
+	rar 3s
+	add (add fx2+2
+	dap fx2+1
+	and fx1
+	ral 3s
+	add (fa4+2
+	dap fx2
+	idx fix
+	lai
+	lio fmp
+	scl 9s
+fx2,	xct .
+	jmp .
+	repeat 4, scr 8s
+	jmp i fix
+
+/float
+/540-20×[log2(AC)] usec
+
+flo,	0
+	lia
+	sir 9s
+	scr 9s
+	xor (210400
+	jdp fnm
+	jmp i flo
+
+fxr,	0
+ft5,	0
+ft6,	0
+ft7,	0
+ft8,	0
+ft9,	0
+
+
+/multiply
+/665+20N usec
+/N = number of steps to normalize result
+
+fmp,	0
+	dac ft8
+	dio ft9
+	X→AI<
+	cmi
+	sir 8s	/-exp(AC)
+	dac fxr
+	aam
+	lxr fmp
+	idx fmp
+	dac fad
+	lac i 0
+	sma
+	cma
+	sar 8s	/-exp(mem)
+	add (377
+	A+IA
+	dac ft7
+	lac ft8
+	lio ft9
+	scl 9s
+	scr 5s
+	rir 1s
+	dac ft8
+	dio ft9
+	lac i 0
+	lio i 1
+	scl 9s
+	scr 5s
+	rir 1s
+	dac ft6
+	dio ft5
+	mul ft8
+	scl 1s
+	sal 8s
+	dac fnm
+	rir 2s
+	dio fmp
+	lac ft6
+	mul ft9
+	adm fmp
+	rir 4s
+	dio ft4
+	lac ft5
+	mul ft8
+	adm fmp
+	rir 4s
+	swp
+	adm ft4
+	lac ft5
+	mul ft9
+	scr 3s
+	add ft4
+	TAAX	/save sign of ac
+	scr 6s
+	scr 8s
+	add fmp
+	A~X<M
+	jmp .+4
+	TAAX>P
+	CII|
+	cma	/change +0 to -0
+	scr 8s
+	add fnm
+	A~X<M
+	jmp .+4
+	spa
+	CII|
+	cma
+	scl 1s
+	jmp fnr
+
+
+/add
+/665+20N usec
+/N = number of steps to normalize result
+
+fad,	0
+	dio ft8+1
+	dac ft8
+	X→AI
+	dac fxr
+	aam
+	lxr fad
+	lac i 0
+	sma
+	cma
+	sar 8s
+	A→IA<M
+	cma
+	sar 8s
+	dac ft7
+	AMIA>
+	jmp .+3
+	dio ft7
+	CAA|
+	lxr (ft8	/must be 15 bit address
+	add (47
+	spa
+	cla
+	scr 3s
+	add (fa5
+	dap fa3+1
+	cla
+	rcl 3s
+	add (fa4
+	dap fa3
+	law i 2
+	adm ft7	/-exp-1
+	lac i 0
+	lio i 1
+	scl 9s
+	scr 3s
+	and (377777
+	scl 1s
+	rir 1s	/each register begins with zero
+	dio ft6
+	dac fnm
+	lac (ft8	/15 bits
+	aam
+	xor fad
+	A~XX
+	lac i 0
+	lio i 1
+	scl 9s
+fa3,	xct .
+	jmp .
+
+fa4,	fan_=9s	repeat 12,scr fan	fan_=fan>2
+
+fa5,	repeat 4,scr 8s
+	and (377777
+	adm fnm
+	idx fad
+	cla∨swp
+	rcr 1s
+	lio fnm
+	add ft6
+fd3,	TAAX	/right half
+	and (377777
+	A→IA>P	/check sign of left half
+	SII	/carry into right
+	I∨XX	/in case that turned on sign of right half
+	and (377777
+	TX<M
+	jmp .+3
+	SAA>P	/carry into left half
+	SII	/wrap around to right half
+	ril 1s
+	rcl 1s
+	scr 2s
+	scl 2s
+
+fnr,	dac fmp	/save sign
+	lxr ft7	/-exp-1 (must be _< -1)
+	SX_<
+	jmp fuv	/exponent underflow
+	spa
+	cma∨cmi
+	A∨IP|
+	ZXP	/fraction is zero
+	SXX<M
+	jmp .+5
+	rcl 1s
+	sma
+	jmp .-4
+	rcr 1s
+	CXX	/put exp in XR (_> -0)
+	scr 8s
+	scl 1s
+	rir 1s
+	SII>P
+	SAA
+	ril 1s
+	scr 2s
+	dac fdv
+	ral 9s
+	X→A<M
+	jmp .+5
+	SAX	/fraction overflow
+	lac fdv
+	scr 1s	/shift fraction down
+	X→AX|
+	lxr fdv
+fd8,	ral 8s	/exponent
+	A+XA>P
+	jmp fov	/overflow
+	lxr fmp
+	TX>P
+	cma∨cmi
+fnx,	lxr fxr
+	jmp i fad
+
+fov,	lac (377777
+	cli∨cmi
+	jmp fnx-3
+fuv,	cla∨cli
+	jmp fnx-3
+
+
+/divide
+/835+20N usec
+/N = number of steps to normalize result
+
+fdv,	0
+	dac ft5
+	dio ft6
+	TXA
+	aam
+	lxr fdv
+	lio i 1
+	lxr i 0
+	X→AX
+	jdp fnm
+	scl 9s
+	dac ft9
+	idx fdv
+	dac fad
+	rir 1s
+	dio ft8
+	lac ft5
+	sma
+	cma
+	sar 8s
+	sub (402
+	adm ft7
+	lac ft5
+	lio ft6
+	scl 9s
+	scr 1s
+	div ft9
+	jmp fov	/division by zero
+	dac fnm
+	swp
+	mul fc1	/200000
+	div ft9
+ft4,	0
+	dac ft5
+	lac ft8
+	mul (-200000
+	div ft9
+	jmp fov
+	mul fnm
+	add ft5
+	lio fnm
+	sir 1s
+	lxr (377777
+	I∧XI
+	spa
+	I+XI
+	dio ft5
+	lio fnm
+	sil 8s
+	sil 8s
+	A∧XA
+	I∧XI
+	A+IA
+	lio ft5
+	jmp fd3
+
+
+/floating input
+
+fip,	dap fi1
+	TXA
+	dac flo
+	law i 1
+	TAX
+	dap fim
+	dzm fi8
+	dzm fi9
+	law i-Z
+	dac fi2
+fi1,	xct .
+	lac fi8
+	A→IAP|
+	jmp fi4
+	sad (20
+	cla	/0
+	sad (73
+	jmp fi5	/.
+	sas (54
+	jmp .+4
+	law 600	/-
+	dap fim
+	jmp fi1
+	add (204000
+	dac fi7
+	and (-360
+	sas fi7
+	jmp fi4
+	lac fi9
+	jdp fmp
+	ten
+	jdp fad
+	fi7
+	dac fi9
+	dio fi8
+	law i 1
+fi2,	0
+	jmp fi1
+
+fi4,	idx fi1
+	lac fi9
+	SXX<M
+	jmp fim
+	jdp fdv
+	ten
+	jmp .-4
+fim,	skp i
+	cma∨cmi
+	lxr flo
+	jmp i fi1
+fi5,	law i-A+XX
+	jmp fi1-1
+
+
+/floating output
+/number of digits printed can be changed at fop+6 and fo8+4
+
+fop,	0
+	dap fo9
+	SAA
+	dap fox
+	law i-Z
+	dac flg
+	law i 8.	/number of digits + 1
+	dac fi7
+	lac fop
+	dzm flo
+	A∧IM|
+	ZAI	/minus zero
+	dio fi8
+	sma
+	jmp fo1
+	cma∨cmi
+	dio fi8
+	lio (charac r-
+	xct fo9
+	lio fi8
+fo1,	dac fi9
+	jdp fix
+	0
+	lio (jdp fmp
+	sza i
+	jmp .+4	/number is < 1
+	law i-CAA	/number is _> 1
+	lio (jdp fdv
+	dac flg
+	dio fo2-1
+	law fo5-2
+	dac fo2
+	law 100
+fo2-6,	dap fo3
+	law 2
+	adm fo2
+	lac fi9
+	lio fi8
+	0	/jdp fmp or fdv
+fo2,	0	/some power of ten
+	dac ft9
+	jdp fix	/this contains a dio fmp
+	0
+	xct flg
+	TA<P
+	jmp f33
+	lac ft9
+	lio fmp
+	dac fi9
+	dio fi8
+	A∨IP	/don't change exponent if exactly zero
+fo3,	law
+flg,	0	/Z, or CAA if num was _> 1
+	adm flo
+f33,	xct fo3
+	rar 1s
+	sma
+	jmp fo2-6
+	xct flg
+	spa
+	jmp f00
+	law i 1	/number was _> 1
+	adm flo
+	idx fi7
+	lac fi9
+	lio fi8
+	jmp fo7+6
+f00,	lio (charac r.
+	xct fo9
+	jmp fo8
+
+/fi9, fi8 are now strictly < 1
+
+fo7,	lac fi9
+	lio fi8
+	jdp fmp
+	ten
+	dac fi9
+	dio fi8
+	jdp fix
+	0
+	TAI|=
+	lio (charac r0
+fo9,	xct .
+	rir 5s
+	law 202
+	rcl 9s
+	cma∨cli∨cmi
+	jdp fad
+	fi9
+	dac fi9
+	law 7
+	A∨IA	/compensate for truncation
+	dac fi8
+	idx flo
+	sza i
+	jmp f00
+fo8,	isp fi7
+	jmp fo7
+	lac flo
+	CAAI|<
+	add (7	/number of digits
+	TAA=
+	A~I>P
+fox,	jmp fox
+	cli
+	xct fo9
+	lio (charac re
+	xct fo9
+	cli
+	xct fo9
+	lio (charac r-
+	CAA>P
+	CAA|
+	xct fo9
+	dac ft9
+	dzm ft8
+dpp,	dac ft7
+	mul (1
+	div .+1
+	12
+	sas ft8
+	jmp dpp
+	sni
+	lio (charac r0
+	xct fo9
+	lac ft7
+	dac ft8
+	lac ft9
+	sas ft8
+	jmp dpp
+	jmp fox
+
+fo5,	352702	360175	/10^64
+	265635	613267	/10^32
+	233216	067447	/10^16
+	215676	570200	/10^8
+	207234	fc1,200000
+hun,	203710	0
+ten,	202240	0
+
+fi9,	0
+fi8,	0
+fi7,	0	0
+
+
+/macros for new pack, 27 april 68
+
+
+define	load a
+	lac a
+	lio a+1
+	terminate
+
+define	fadd a
+	jdp fad
+	a
+	terminate
+
+equals floadd,fadd
+
+define	mulby a
+	jdp fmp
+	a
+	terminate
+
+define	store a
+	dac a
+	dio a+1
+	terminate
+
+define	fsub a
+	negate
+	jdp fad
+	a
+	negate
+	terminate
+
+
+define	divby a
+	jdp fdv
+	a
+	terminate
+
+negate=cma∨cmi
+
+
+/constants
+
+zero,	0	0
+zer=zero
+one,	200600	0
+two,	201200	0
+three,	201300	0
+thr=three
+four,	201600	0
+for=four
+five,	201640	0
+fiv=five
+/ten and hun (100.) exist elsewhere
+pi,	201311	37553
+pi2,	200711	37553
+2pi,	201711	37553
+m1,	577177	777777
+m2,	576577	777777
+haf,	200200	0
+pt1,	176714	631463	/0.1
+p01,	175243	656051	/0.01
+rt2,	200665	11715	/sq root of 2.0
+
+dimension tem(2),tmp(2)	/so always available
+
+dimension fb1(2),fb3(2),fb5(2)	/used by functions
+
+
+/sqrt, 4 feb 1969
+/Newton-Raphson method, 3 iterations
+/call by jdp fsr
+/sqrt(AI) → AI
+/5.1 msec
+
+fsr,	0
+	spa
+	negate
+	A∨IP|
+	jmp i fsr
+	dac fi7
+	dio flo
+	scr 1s	/approximate sqrt(x) by
+	rar 8s	/ x/2+.4750 in [.5,1)
+	spa	/or x/2+.4645 in [1,2)
+	add (202000	/relative error < .0355
+	ral 8s
+	add (100172
+	dac fi9
+	law i 3
+	dac fix
+fsa,	dio fi9+1
+	lac fi7
+	lio flo
+	divby fi9
+	floadd fi9
+	sub (400
+	dac fi9
+	isp fix
+	jmp fsa
+	lac fi9
+	jmp i fsr
+
+
+/log, 18 dec 1968
+/call by jdp fln
+/ln(AI) → AI
+/10 msec
+
+ln2,	200261	344137	/.6931471 (ln(2))
+fln,	0
+	jdp lg2
+	jdp fmp
+	ln2
+	jmp i fln
+
+/log base 2
+/Hastings, Approxs. for dig. comp., p166
+/call by jdp lg2
+/log2(AI) → AI
+/10 msec
+
+lg2,	0
+	jdp fnm
+	spq
+	hlt	/zero or negative
+	and (377
+	dio fb3 1
+	lio (-401
+	sub (265
+	sma
+	SII|	/>1/sqrt 2
+	add (400	/<1/sqrt 2
+	add (200265
+	dac fb3
+	lai
+	add ft7
+	jdp flo
+	store fb1
+	lac one
+	cli
+	floadd fb3
+	store fb5
+	cli∨cmi
+	lac m1
+	floadd fb3
+	divby fb5
+	store fb5
+	mulby fb5
+	store fb3
+	mulby flh
+	floadd flh+2
+	mulby fb3
+	floadd flh+4
+	mulby fb3
+	floadd flh+6
+	mulby fb5
+	floadd fb1
+	jmp i lg2
+flh,	177736	256453	/.4342597
+	200223	460041	/.5765385
+	200366	161113	/.9618007
+	201270	524353	/2.885390
+
+
+/exp, 18 dec 1968
+/call by jdp exp
+/e^(AI) → AI
+/7 msec
+
+exp,	0
+	jdp fmp
+	f2a+14
+	jdp f2x
+	jmp i exp
+
+
+/2^x
+/Ralston and Wilf, p.19
+/call by jdp f2x
+/2^(AI) → AI
+/6.5 msec
+
+f2x,	0
+	dac fb3
+	dio fb3+1
+	div (204400
+	hlt	/| exp| _> 256.
+	lac fb3
+	lio fb3+1
+	jdp fix
+	-8.
+	dac fb3
+	and (777400
+	spa
+	sub (1
+/separation of integer and fraction parts is bad by one bit
+/here if arg is negative, maybe someone would like to fix it
+	dac fb1
+	law 377
+	and fb3
+	xor fc1	/200000
+	jdp fnm
+	floadd f2a+12
+/if fraction part = 0.5, will get zero here, divide overflow
+/will occur, seems to get correct result exactly
+	store fb3
+	load f2a
+	divby fb3
+	floadd fb3
+	store fb5
+	load f2a+2
+	divby fb5
+	floadd fb3
+	floadd f2a+4
+	store fb5
+	load f2a+6
+	divby fb5
+	floadd f2a+10
+	add fb1
+	jmp i f2x
+
+f2a,	202646	404677	/20.81369
+	203720	106056	/104.0684
+	575165	400516	/-17.31234
+	574474	104154	/-48.96669
+	577112	766062	/-1.414213 (-sq rt of 2)
+	577577	777777	/-0.5
+	200670	524355	/1.44269504 (log2(e))
+
+
+/a^b, 20 dec 1968
+/call by jdp fxp followed by exponent
+/AI^exponent → AI
+/base must be _> 0, 0^0 = 0
+/17.5 msec
+
+fxp,	0
+	dac fmp
+	aam
+	lac fxp
+	dac .+7
+	idx fxp
+	lac fmp
+	sza i
+	jmp i fxp	/base is zero
+	jdp lg2
+	jdp fmp
+	0
+	jdp f2x
+	jmp i fxp
+
+
+/a^i, 20 dec 1968
+/call by jdp ixp followed by exponent (integer)
+/AI^exponent → AI
+/~ 1.1 log2(exponent) msec
+
+ixp,	0
+	store fb3
+	lio one
+	dio fb1
+	dzm fb1+1
+	TXA
+	dac fb5
+	lxr ixp
+	idx ixp
+	lxr i 0
+	lac i 0
+	lio (jdp fdv
+	spa
+	CAA|
+	lio ixb+2	/jdp fmp
+	dio ixo
+ixc,	scr 1s
+	TAX
+	spi i
+	jmp ixb
+	load fb1
+ixo,	0	/jdp fmp or fdv
+	fb3
+	store fb1
+ixb,	load fb3
+ixb+2,	mulby fb3
+	store fb3
+	TXAP
+	jmp ixc
+	load fb1
+	lxr fb5
+	jmp i ixp
+
+
+/cossin, 16 feb 1969
+/jdp sin or jdp cos
+/sin(AI) or cos(AI) → AI
+/Hart et al, Computer Approx's
+/approx no. 3180 (7th degree poly) for sin
+/approx no. 3700 (6th degree poly) for cos
+/both are accurate to .9E-8 (relative)
+/7.9 msec
+
+cos,	0
+	floadd pi2
+	dac fb1
+	lac cos
+	dac sin
+	lac fb1
+	jmp sin+1
+
+sin,	0
+	divby pi2
+	store fb3
+	jdp fix
+	0
+	TXI
+	dio fb1
+	CAAI<M
+	SAA|
+	sub (1
+	sar 1s
+	scr 1s
+	A~IX
+	scl 2s
+	jdp flo
+	floadd fb3
+/in first or fourth quadrant
+/-1 _< AI _< 1, want sin (AI×pi/2)
+/XR has sign
+	A~XX
+	spa
+	negate
+	dac fb5	/now in [0,1]
+	sub (200222	/.5688
+	spa
+	jmp sn2
+/use cos in [0,.4312×pi/2]
+	lac fb5
+	floadd m1
+	dac fb5
+	law sit+10
+	jmp sn2+1
+/use sin in [0,.5688×pi/2]
+sn2,	law sit
+	dac sic
+	add (2
+	dac sia
+	lac fb5
+	dio fb5+1
+	mulby fb5
+	store fb3
+	jdp fmp
+sic,	0
+	jmp sia-1
+sib,	lac cos
+	mulby fb3
+	jdp fad
+sia,	0
+	dac cos
+	law 2
+	adm sia
+	sad (sit+20
+	jmp scg	/end of cos
+	sas (sit+10
+	jmp sib
+	lac cos	/end of sin
+	mulby fb5
+	jmp .+2
+scg,	lac cos
+	TX>P
+	negate
+	lxr fb1
+	jmp i sin
+
+sit,	603151	767434	/-.00457813997
+	176643	125500	/ .07967150287
+	577532	504277	/-.64596270916
+	200711	037552	/ 1.5707963124
+	602127	721431	/-.02051888693
+	177601	667174	/ .25362870276
+	577142	054232	/-1.2336989859
+	200377	777777	/ .99999999043
+
+
+/trailer
+
+constants
+variables
+	repeat if2,[
+	repeat 1~ifup 2,[
+	printx .first free location = .
+	printo .
+	printx /
+/]
+]
+start
+
+
+,	201200	0
+three,	20p fixa
+jdp sin
+	jdp fixb
+	jmp i .sin
+.cos,	ocation = .
+	printo .
+	printx /
+/]
+]
+start
+
+
+,	201200	0
+three,	201300	0
+thro .
+	printx /
+/]
+]
+start
+
+
+,	201200	0
+three,	201300	0
+thr=three
+four,	201600
+	jmp sia-1
+sib,	lac cos
+	mulby fb3
+	jdp fad
+sia,	0
+	dac cos
+	law 2
+	adm sia
+	sad (sit+20
+	jmp scg	/end of cos
+	sas (sit+10
+	jmp sib
+	lac cos	/end of sin
+	mulby fb5
+	jmp .+2
+scg,	lac cos
+	TX>P
+	negate
+	lxr fb1
+	jmp i sin
+
+sit,	603151	767434	/-.00457813997
+	176643	125500	/ .07967150287
+	577532	504277	/-.64596270916
+	200711	037552	/ 1.5707963124
+	602127	721431	/-.02051888693
+	177601	667174	/ .25362870276
+	577142	054232	/-1.2336989859
+	200377	77773*9

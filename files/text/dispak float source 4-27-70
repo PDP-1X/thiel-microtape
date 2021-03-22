@@ -1,0 +1,1661 @@
+/6.273 scope and floating point package
+/11/8/69   D. Thiel
+/contains variable size characters, improved message
+/header
+4600/
+/starts at 4600
+.knb,	0
+	jmp .knb1
+.but,	0
+	jmp .but1
+.swt,	0
+	jmp .swt1
+.sop,	0
+	jmp .sop1
+.sdp,	0
+	jmp .sdp1
+.cd,	0
+	jmp .cd1
+.cdx,	507000
+.cdy,	300000
+.lin,	0
+	jmp .lin1
+.hline,	hline
+.vline,	vline
+.tpn,	0
+	jmp .tpn1
+.pnt,	0
+	jmp .pnt1
+.save,	0
+	jmp .save1
+.rstor,	0
+	jmp .rstr1
+.txx,	jmp mes
+.size,	0
+	jmp siz
+.fop,	0
+	dac fopst
+	dio fopst 1
+	jdp fixa
+	jda fop
+	tyo
+	jdp fixb
+	lac fopst
+	lio fopst 1
+	jmp .fop i
+fopst,	0	0
+
+
+.fip,	0
+	jdp fixa
+	jsp fip
+	tyi
+	jdp fixb
+	jmp i .fip
+
+.fadd,	fad
+.fmul,	fmp
+.fdiv,	fdv
+.frti,	ixp
+.frtr,	fxp
+.fzero=zero
+.fone=one
+.ftwo=two
+.fthre=three
+.ffour=four
+.ften=ten
+.fhun=hun
+.fpi=pi
+.f2pi=2pi
+.fpi2=pi2
+.fmin1=m1
+.fmin2=m2
+.fhalf=haf
+.fpt1=pt1	/0.1
+.fpt01=p01	/0.01
+.frt2=rt2	/square root of 2
+.fln,	0
+	jdp fixa
+	jdp fln
+	jdp fixb
+	jmp i .fln
+
+.flog,	0
+	jdp fixa
+	jdp fln
+	jdp fmp
+	ln10
+	jdp fixb
+	jmp i .flog
+
+ln10,	177736	267543
+
+.fsqrt,	0 
+	jdp fixa
+	jdp fsr
+	jdp fixb
+	jmp i .fsqrt
+
+.fexp,	0
+	jdp fixa
+	jdp exp
+	jdp fixb
+	jmp i .fexp
+
+.fix,	0
+	jdp fixa
+	jdp fix
+	0
+	jdp fixb
+	jmp i .fix
+
+.float,	0
+	jdp fixa
+	jdp flo
+	jdp fixb
+	jmp i .float
+
+
+define	prtr1 x
+	printx /x=/
+	printo x
+	printx /
+/
+	terminate
+define	prtr x
+	irp w,x
+	prtr1 w
+	terminate
+	terminate
+
+
+	repeat if2∧ifup 4,[
+	prtr [.knb,.but,.swt,.sop,.sdp,.cd,.cdx,.cdy,.lin,.tpn]
+	prtr [.pnt,.save]
+	prtr [.vline,.hline]
+	prtr [.rstor,.txx,.size]
+	prtr [.fpi2,.fmin1,.fmin2,.fhalf,.fpt1,.fpt01,.fzero]
+
+	prtr [.fone,.ftwo,.fthre,.ffour,.ften,.fpi,.f2pi,.fhun]
+	prtr [.fmul,.fdiv,.fadd,.fln,.flog,.fsqrt,.fexp,.fix,.float]
+	prtr [.fixa,.fixb,.frtr,.frti,.fip,.fop]
+	]
+
+/save routine to enter iam for floating point routines
+/saves flags and address mode while in floating point routines
+
+
+fixa,	0
+	dio iosav1‾
+	rpf
+	dio flag1‾
+	iam
+	lio iosav1
+	jmp i fixa
+.fixa=fixa
+
+
+
+fixb,	0
+	dio iosav1
+	lio flag1
+	lpf
+	lio iosav1
+	jmp i fixb
+
+.fixb=fixb
+
+/6.25 knob input routine
+/jdp .knb
+
+.knb1,	nam
+	xct i .knb
+	idx .knb
+	dap .kn1
+	lai
+	rar 8s
+	xor (add
+	sar 8s
+.kn1,	dac i 
+	idx .knb
+	jmp i .knb
+
+/6.25 button input routine
+/jdp .but
+
+.but1,	nam
+	lac i .but
+	rbt
+	cma
+	rir 1s
+	ril 1s
+	SAA>
+	jmp .-2
+	spi i
+	idx .but
+	idx .but
+	jdp .rstor
+	jmp i .but
+
+/6.25 switch input routine
+/jdp .swt
+
+.swt1,	nam
+	lac i .swt
+	rbt
+	cma
+	ril 8s
+	ril 1s
+	SAA>
+	jmp .-2
+	spi i
+	idx .swt
+	idx .swt
+	jdp .rstor
+	jmp i .swt
+
+/save and restore mode to entered mode(indirect or indexed)
+.save1,	dio .io
+	dac .ac
+	TXXI
+	dio .xr‾
+	rpf
+	dio .f‾
+	jmp i .save
+
+
+.rstr1,	lio .f
+	lpf
+	lio .‾io
+	lac .‾ac
+	lxr .xr
+	jmp i .rstor
+
+
+/6.25 scope decimal and octal
+/jdp .sdp or jdp .sop
+
+.sop1,	lxr .sop
+	lio (10
+	jmp cpt
+
+.sdp1,	lxr .sdp
+	lio (10.
+cpt,	dio rad
+	dac ‾dpt
+	TXXA
+	dap dpx
+	dzm d‾p1
+dpl,	lac dpt
+	lio (54
+	spa
+	jdp sco
+	spa
+	cma 20
+	dac dpt
+dpa,	dac d‾p2
+	mul (1
+	div . 1
+rad,	12
+	sas dp1
+	jmp dpa
+	sni
+	lio dpa-2
+	jdp sco
+	lac dp2
+	dac dp1
+	sas dpt
+	jmp dpl
+dpx,	jmp .
+sco,	0
+	dac ‾t69
+	lai
+	jdp .cd
+	lac t69
+	jmp i sco
+
+
+/character display (for 6.25)
+
+cd_=.cd	cdx_=.cdx	cdy_=.cdy
+.cd1,	and (77
+	sal 1
+	add cds
+	dap cd4-1
+	dzm siz4
+	law cd5-1
+	dap cd4
+	xct cd4-1
+	spa
+	jmp c9d
+cd1,	and (376000
+	TAXA
+	lio cdy
+cd2,	A+XX<
+	jmp cd3
+	lac cdx
+	dpy-i 200
+cd3,	lac siz1
+	A+II
+	lac (376000
+	A∧XXA=
+	jmp cd2
+	lac siz1
+	adm cdx
+	idx cd4
+	lac .
+cd4,	xct .
+	jmp cd1
+	idx cd4-1
+	xct cd4-1
+	rcr 4s
+	jmp cd1
+
+cd5,	ral 7s
+	TAI|
+	ral 3s
+	rar 8s
+	jmp cd6
+
+cd6,	lac siz2
+	adm cdx
+	lac siz4
+	adm cdy
+	jmp i cd
+
+cd7,	lac (77777	/tab
+	ior cdx
+	add siz6
+	dac cdx
+	jmp i cd
+
+
+cdc,	ZAP	/lower case
+	law 200	/upper case
+	add (cd9
+	dac cds
+	jmp i cd
+
+cds,	cd9
+
+c9d,	sas (add
+	jmp c8d
+	idx cd4-1
+	dap . 1
+	jmp .
+
+c8d,	lac siz3
+	dac siz4
+	cma
+	adm cdy
+	xct cd4-1
+	jmp cd1
+
+cd8,	lac siz5	/c.r.
+	adm cdy
+	lac (507000
+	dac cdx
+	jmp i cd
+
+ini,	lac (300000	/16 - initialize
+	dac cdy
+	jmp cd8+2
+
+siz1,	1000
+siz2,	2000
+siz3,	3000
+siz4,	0
+siz5,	-14000
+siz6,	7001
+
+
+cd9,	0	0	/space
+	27	740000	/1
+	305214	462306	/2
+	105014	462266	/3
+	36100	437610	/4
+	137114	462261	/5
+	175114	462262	/6
+	3610	441203	/7
+	155114	462266	/8
+	15114	452236	/9
+	add	jmp i cd
+	add	jmp i cd	/stop
+	51253	305010	/pointer
+	add	jmp i cd
+	add	jmp ini	/initialize
+	add	jmp i cd
+
+	175014	60276	/0
+	100200	401002	//
+	221245	211000	/s
+	10764	211000	/t
+	171004	37000	/u
+	70404	10034	/v
+	171003	20074	/w
+	210501	12104	/x
+	417104	417600	/y
+	211445	223104	/z
+	add	jmp i cd
+	500200	0	/,
+	add	jmp i cd
+	add	jmp i cd
+	add	jmp cd7	/tab
+	add	jmp i cd
+
+
+	0	400000	/
+	501004	217200	/j
+	376202	421000	/k
+	1774	0	/l
+	370047	401170	/m
+	370040	236000	/n
+	161044	216000	/o
+	776110	441400	/p
+	414110	477640	/q
+	370040	202000	/r
+	add	jmp i cd
+	add	jmp i cd
+	20100	402010	/-
+	1012	107000	/)
+	2010	40201	/‾
+	342	120200	/(
+
+	add	jmp i cd
+	161044	237100	/a
+	377104	414000	/b
+	161044	212000	/c
+	161044	237600	/d
+	161245	226000	/e
+	21760	440400	/f
+	415114	457600	/g
+	376100	434000	/h
+	7	500000	/i
+	add	jmp cdc
+	4	0	/.
+	add	jmp cdc 1
+	add	jmp i cd
+	add	jmp i cd
+	add	jmp cd8
+
+
+	0	0	/space
+	30	600	/"
+	0	140000	/'
+	4010	40401	/~
+	104422	110434	/⊃
+	70402	10034	/∨
+	70020	100434	/∧
+	20242	120200	/<
+	1012	105010	/>
+	10027	740404	/^
+	add	jmp i cd
+	add	jmp i cd	/stop
+	51253	305010	/pointer
+	add	jmp i cd
+	add	jmp ini	/initialize
+	add	jmp i cd
+
+	20102	507010	/→
+	4015	42206	/?
+	115114	462262	/S
+	2017	740201	/T
+	177004	20077	/U
+	76404	10037	/V
+	177003	20077	/W
+	306240	405143	/X
+	6047	401003	/Y
+	303214	461303	/Z
+	add	jmp i cd
+	50241	205024	/=
+	add	jmp i cd
+	add	jmp i cd
+	add	jmp cd7	/tab
+	add	jmp i cd
+
+
+	601004	20100	/_
+	101004	20077	/J
+	376101	210501	/K
+	377004	20100	/L
+	376020	200577	/M
+	376040	404177	/N
+	175014	60276	/O
+	376110	442206	/P
+	175015	50336	/Q
+	376111	452306	/R
+	add	jmp i cd
+	add	jmp i cd
+	20103	702010	/+
+	1014	77600	/]
+	7	740000	/|
+	1774	60200	/[
+
+	add	jmp i cd
+	370221	44574	/A
+	377114	462266	/B
+	175014	60242	/C
+	377014	60276	/D
+	377114	462301	/E
+	376110	442201	/F
+	175015	64262	/G
+	376100	402177	/H
+	1017	760200	/I
+	add	jmp cdc
+	104240	405042	/×
+	add	jmp cdc 1
+	add	jmp i cd
+	add	jmp i cd
+	add	jmp cd8
+
+/variable size character option
+/ .W. Thiel     1/14/69
+
+siz,	TII>
+	lio (1
+	law i 300
+	A+I<
+	CAI
+	sil 6s
+	dio siz1
+	lai
+	sil 1s
+	dio siz2
+	A+II
+	dio siz3
+	sil 1s
+	A+II
+	dio siz6
+	sal 1s
+	sil 1s
+	AMII
+	dio siz5
+	jmp i .size
+
+hline,	0
+	jdp .save
+	iam
+	lxr hline
+	aam
+	lio i 0	/y
+	sil 8s
+	aam
+	lac i 1	/x1
+	aam
+	lxr i 2	/x2
+	CXX
+	sal 8s
+	iot 307
+	sar 8s
+	A+X<
+	jmp . 3
+	SAA
+	jmp .-6
+	law 3
+	adm hline
+	jdp .rstor
+	jmp i hline
+
+vline,	0
+	jdp .save
+	iam
+	lxr vline
+	aam
+	lac i 0	/x
+	sal 8s
+	aam
+	lio i 1	/y1
+	aam
+	lxr i 2	/y2
+	CXX
+	sil 8s
+	iot 307
+	sir 8s
+	I+X<
+	jmp . 3
+	SII
+	jmp .-6
+	law 3
+	adm vline
+	jdp .rstor
+	jmp i vline
+
+/6.25 line drawer with fixed window
+
+/Coordinates are right justified, up to 17 bit magnitude.
+/Coordinates are truncated down to magnitude _< 777 (size of scope face)
+/Goes to fgt in base mode if
+/no part of line is visible. Displays line once and goes to lg6 if
+/it is visible.
+
+.lin1,	dac x1
+	dio y1
+	nam
+	lac i .lin
+	dac x2
+	idx .lin
+	lio i .lin
+	dio y2
+	idx .lin
+sqn,	iam	/could be nam
+	law tab
+	dac ‾xr1
+sq0,	clf 6
+	lxr xr1
+	bam
+	law i 777
+	szf 6
+	cma
+	lia
+	add i 3
+	swp
+	add i 4
+	szf 6
+	cma∨cmi
+	TAAM|
+	cla
+	TIIM|
+	cli
+	A∨I<M
+	jmp fgt	/forget it, can't be seen
+	A∧I>P
+	jmp sq2	/no adjustment
+	spi
+	SXX|
+	swp
+	dac 11
+	AMIA
+	dac 12
+	lac i 4
+	sub i 3
+	mul 11
+	div 12
+	hlt
+	adm i 3
+	lac i 1
+	sub i 0
+	mul 11
+	div 12
+	hlt
+	adm i 0
+sq2,	iam
+	szf 6
+	jmp .+3
+	stf 6
+	jmp sq0+1
+	law 3
+	adm xr1
+	sas (tab+6
+	jmp sq0
+	lac x2
+	sub x1
+	sal 6s
+	lia
+	lac y2
+	sub y1
+	sal 6s
+	dac lg3
+	spa
+	cma
+	spi
+	AMIAX|
+	A+IAX
+	dac lg9
+	lai
+	scr 7s
+	div lg9
+	jmp lg4
+	dac lg7
+	lac lg3
+	scr 7s
+	div lg9
+lg3,	0
+	dac lg3
+	TXXA
+	sar 8s
+	CAX
+lg4,	lio y1
+	lac x1
+	rcl 8s
+lg5,	dpy-i 300
+	add lg7
+	swp
+	add lg3
+	swp
+	SXX>P
+	jmp lg5
+lg6,fgt,	nam
+	jmp i .lin
+
+lg7,	0
+lg9,	0
+x1,	0
+y1,	0
+x2,	0
+y2,	0
+
+tab,	x1	x2	x1
+	y1	y2	y1
+	x1	x2	x1
+
+. 6/	/reserve space for table
+
+
+/6.25 version of rst's find the pen
+/jdp .tpn , returns right justified x,y in ac,io
+tpn_=.tpn1
+.tpn1,	lac x
+	lio y
+	stf 3
+	jmp tp1
+tpl,	add in1
+	swp 3
+	add in2
+	swp
+tp1,	dpy-i 300	/insert nop before here for non-ts
+	szf 3
+	jmp tpl
+tpd,	sub x
+	sar 1
+	adm tx
+	lai
+	sub y
+	sar 1
+	adm ty
+	lac in1
+	lio in2
+	cma 3
+	dac in2
+	dio in1
+	spi∨spa i
+	jmp .tpn1
+	lac tx
+	lio ty
+	dac x
+	dio y
+	dpy 300
+	szf 3
+	jmp tpo
+fpl,	dpy-i 300
+	dac ‾tx
+	xct . 1
+	dac tx	/kill time
+	rar 1
+	xor (110371
+	add (110371
+	lia
+	rir 9s
+	szf i 3
+	jmp fpl
+fpd,	lac tx
+	lia
+	rir 9s
+	dac ‾x
+	dio ‾y
+	dio ‾ty
+	jmp tp1
+
+in1,	-1000
+in2,	-0
+
+tpo,	sir 8s
+	sar 8s
+	jmp i .tpn
+
+/6.25 display a point
+
+.pnt1,	ral 8s
+	ril 8s
+	dpy -i 100
+	jmp i .pnt
+
+/new message routine    12/12/68    D. Thiel
+
+
+mes,	nam
+	dap txyz
+	lio i txyz
+	idx txyz
+	lac (607600
+	rcl 6s
+	sad (760037
+txyz,	jmp .
+	sad (760060
+	jmp mes 2
+	dio ‾txx1
+	jdp .cd
+	lio ‾txx1
+	jmp txyz-3
+
+
+/floating pack 3 june 1969
+
+/normalize
+/190+20N usec, N = number of steps
+
+fnm,	0
+	dac fmp
+	X→AX
+	dac fxr
+	lac fnm
+	dac fad
+	TXXA<M
+	cma
+	sar 8s
+	sub (1	/-exp-1
+	X→AX
+	spa
+	cma∨cmi
+	scl 9s
+	A∨IP|
+	ZXP
+	SXX<M
+	jmp .+5
+	rcl 1s
+	sma
+	jmp .-4
+	rcr 1s
+	CXX
+	scr 9s
+	X→AX
+	dac ft7	/fdv will need this
+	jmp fd8
+
+
+/fix
+/195 usec
+
+fix,	0
+	dio fmp
+	TAAI>P
+fx1,	cma
+	sar 8s
+	aam
+	sub fix
+	sub (421
+	szm
+	cla
+	add (43
+	spa
+	cla
+	rar 3s
+	add (add fx2+2
+	dap fx2+1
+	and fx1
+	ral 3s
+	add (fa4+2
+	dap fx2
+	idx fix
+	lai
+	lio fmp
+	scl 9s
+fx2,	xct .
+	jmp .
+	repeat 4, scr 8s
+	jmp i fix
+
+/float
+/540-20×[log2(AC)] usec
+
+flo,	0
+	lia
+	sir 9s
+	scr 9s
+	xor (210400
+	jdp fnm
+	jmp i flo
+
+fxr,	0
+ft5,	0
+ft6,	0
+ft7,	0
+ft8,	0
+ft9,	0
+
+
+/multiply
+/665+20N usec
+/N = number of steps to normalize result
+
+fmp,	0
+	dac ft8
+	dio ft9
+	X→AI<
+	cmi
+	sir 8s	/-exp(AC)
+	dac fxr
+	aam
+	lxr fmp
+	idx fmp
+	dac fad
+	lac i 0
+	sma
+	cma
+	sar 8s	/-exp(mem)
+	add (377
+	A+IA
+	dac ft7
+	lac ft8
+	lio ft9
+	scl 9s
+	scr 5s
+	rir 1s
+	dac ft8
+	dio ft9
+	lac i 0
+	lio i 1
+	scl 9s
+	scr 5s
+	rir 1s
+	dac ft6
+	dio ft5
+	mul ft8
+	scl 1s
+	sal 8s
+	dac fnm
+	rir 2s
+	dio fmp
+	lac ft6
+	mul ft9
+	adm fmp
+	rir 4s
+	dio ft4
+	lac ft5
+	mul ft8
+	adm fmp
+	rir 4s
+	swp
+	adm ft4
+	lac ft5
+	mul ft9
+	scr 3s
+	add ft4
+	TAAX	/save sign of ac
+	scr 6s
+	scr 8s
+	add fmp
+	A~X<M
+	jmp .+4
+	TAAX>P
+	CII|
+	cma	/change +0 to -0
+	scr 8s
+	add fnm
+	A~X<M
+	jmp .+4
+	spa
+	CII|
+	cma
+	scl 1s
+	jmp fnr
+
+
+/add
+/665+20N usec
+/N = number of steps to normalize result
+
+fad,	0
+	dio ft8+1
+	dac ft8
+	X→AI
+	dac fxr
+	aam
+	lxr fad
+	lac i 0
+	sma
+	cma
+	sar 8s
+	A→IA<M
+	cma
+	sar 8s
+	dac ft7
+	AMIA>
+	jmp .+3
+	dio ft7
+	CAA|
+	lxr (ft8	/must be 15 bit address
+	add (47
+	spa
+	cla
+	scr 3s
+	add (fa5
+	dap fa3+1
+	cla
+	rcl 3s
+	add (fa4
+	dap fa3
+	law i 2
+	adm ft7	/-exp-1
+	lac i 0
+	lio i 1
+	scl 9s
+	scr 3s
+	and (377777
+	scl 1s
+	rir 1s	/each register begins with zero
+	dio ft6
+	dac fnm
+	lac (ft8	/15 bits
+	aam
+	xor fad
+	A~XX
+	lac i 0
+	lio i 1
+	scl 9s
+fa3,	xct .
+	jmp .
+
+fa4,	fan_=9s	repeat 12,scr fan	fan_=fan>2
+
+fa5,	repeat 4,scr 8s
+	and (377777
+	adm fnm
+	idx fad
+	cla∨swp
+	rcr 1s
+	lio fnm
+	add ft6
+fd3,	TAAX	/right half
+	and (377777
+	A→IA>P	/check sign of left half
+	SII	/carry into right
+	I∨XX	/in case that turned on sign of right half
+	and (377777
+	TX<M
+	jmp .+3
+	SAA>P	/carry into left half
+	SII	/wrap around to right half
+	ril 1s
+	rcl 1s
+	scr 2s
+	scl 2s
+
+fnr,	dac fmp	/save sign
+	lxr ft7	/-exp-1 (must be _< -1)
+	SX_<
+	jmp fuv	/exponent underflow
+	spa
+	cma∨cmi
+	A∨IP|
+	ZXP	/fraction is zero
+	SXX<M
+	jmp .+5
+	rcl 1s
+	sma
+	jmp .-4
+	rcr 1s
+	CXX	/put exp in XR (_> -0)
+	scr 8s
+	scl 1s
+	rir 1s
+	SII>P
+	SAA
+	ril 1s
+	scr 2s
+	dac fdv
+	ral 9s
+	X→A<M
+	jmp .+5
+	SAX	/fraction overflow
+	lac fdv
+	scr 1s	/shift fraction down
+	X→AX|
+	lxr fdv
+fd8,	ral 8s	/exponent
+	A+XA>P
+	jmp fov	/overflow
+	lxr fmp
+	TX>P
+	cma∨cmi
+fnx,	lxr fxr
+	jmp i fad
+
+fov,	lac (377777
+	cli∨cmi
+	jmp fnx-3
+fuv,	cla∨cli
+	jmp fnx-3
+
+
+/divide
+/835+20N usec
+/N = number of steps to normalize result
+
+fdv,	0
+	dac ft5
+	dio ft6
+	TXA
+	aam
+	lxr fdv
+	lio i 1
+	lxr i 0
+	X→AX
+	jdp fnm
+	scl 9s
+	dac ft9
+	idx fdv
+	dac fad
+	rir 1s
+	dio ft8
+	lac ft5
+	sma
+	cma
+	sar 8s
+	sub (402
+	adm ft7
+	lac ft5
+	lio ft6
+	scl 9s
+	scr 1s
+	div ft9
+	jmp fov	/division by zero
+	dac fnm
+	swp
+	mul fc1	/200000
+	div ft9
+ft4,	0
+	dac ft5
+	lac ft8
+	mul (-200000
+	div ft9
+	jmp fov
+	mul fnm
+	add ft5
+	lio fnm
+	sir 1s
+	lxr (377777
+	I∧XI
+	spa
+	I+XI
+	dio ft5
+	lio fnm
+	sil 8s
+	sil 8s
+	A∧XA
+	I∧XI
+	A+IA
+	lio ft5
+	jmp fd3
+
+
+/floating input
+
+fip,	dap fi1
+	TXA
+	dac flo
+	law i 1
+	TAX
+	dap fim
+	dzm fi8
+	dzm fi9
+	law i-Z
+	dac fi2
+fi1,	xct .
+	lac fi8
+	A→IAP|
+	jmp fi4
+	sad (20
+	cla	/0
+	sad (73
+	jmp fi5	/.
+	sas (54
+	jmp .+4
+	law 600	/-
+	dap fim
+	jmp fi1
+	add (204000
+	dac fi7
+	and (-360
+	sas fi7
+	jmp fi4
+	lac fi9
+	jdp fmp
+	ten
+	jdp fad
+	fi7
+	dac fi9
+	dio fi8
+	law i 1
+fi2,	0
+	jmp fi1
+
+fi4,	idx fi1
+	lac fi9
+	SXX<M
+	jmp fim
+	jdp fdv
+	ten
+	jmp .-4
+fim,	skp i
+	cma∨cmi
+	lxr flo
+	jmp i fi1
+fi5,	law i-A+XX
+	jmp fi1-1
+
+
+/floating output
+/number of digits printed can be changed at fop+6 and fo8+4
+
+fop,	0
+	dap fo9
+	SAA
+	dap fox
+	law i-Z
+	dac flg
+	law i 8.	/number of digits + 1
+	dac fi7
+	lac fop
+	dzm flo
+	A∧IM|
+	ZAI	/minus zero
+	dio fi8
+	sma
+	jmp fo1
+	cma∨cmi
+	dio fi8
+	lio (charac r-
+	xct fo9
+	lio fi8
+fo1,	dac fi9
+	jdp fix
+	0
+	lio (jdp fmp
+	sza i
+	jmp .+4	/number is < 1
+	law i-CAA	/number is _> 1
+	lio (jdp fdv
+	dac flg
+	dio fo2-1
+	law fo5-2
+	dac fo2
+	law 100
+fo2-6,	dap fo3
+	law 2
+	adm fo2
+	lac fi9
+	lio fi8
+	0	/jdp fmp or fdv
+fo2,	0	/some power of ten
+	dac ft9
+	jdp fix	/this contains a dio fmp
+	0
+	xct flg
+	TA<P
+	jmp f33
+	lac ft9
+	lio fmp
+	dac fi9
+	dio fi8
+	A∨IP	/don't change exponent if exactly zero
+fo3,	law
+flg,	0	/Z, or CAA if num was _> 1
+	adm flo
+f33,	xct fo3
+	rar 1s
+	sma
+	jmp fo2-6
+	xct flg
+	spa
+	jmp f00
+	law i 1	/number was _> 1
+	adm flo
+	idx fi7
+	lac fi9
+	lio fi8
+	jmp fo7+6
+f00,	lio (charac r.
+	xct fo9
+	jmp fo8
+
+/fi9, fi8 are now strictly < 1
+
+fo7,	lac fi9
+	lio fi8
+	jdp fmp
+	ten
+	dac fi9
+	dio fi8
+	jdp fix
+	0
+	TAI|=
+	lio (charac r0
+fo9,	xct .
+	rir 5s
+	law 202
+	rcl 9s
+	cma∨cli∨cmi
+	jdp fad
+	fi9
+	dac fi9
+	law 7
+	A∨IA	/compensate for truncation
+	dac fi8
+	idx flo
+	sza i
+	jmp f00
+fo8,	isp fi7
+	jmp fo7
+	lac flo
+	CAAI|<
+	add (7	/number of digits
+	TAA=
+	A~I>P
+fox,	jmp fox
+	cli
+	xct fo9
+	lio (charac re
+	xct fo9
+	cli
+	xct fo9
+	lio (charac r-
+	CAA>P
+	CAA|
+	xct fo9
+	dac ft9
+	dzm ft8
+dpp,	dac ft7
+	mul (1
+	div .+1
+	12
+	sas ft8
+	jmp dpp
+	sni
+	lio (charac r0
+	xct fo9
+	lac ft7
+	dac ft8
+	lac ft9
+	sas ft8
+	jmp dpp
+	jmp fox
+
+fo5,	352702	360175	/10^64
+	265635	613267	/10^32
+	233216	067447	/10^16
+	215676	570200	/10^8
+	207234	fc1,200000
+hun,	203710	0
+ten,	202240	0
+
+fi9,	0
+fi8,	0
+fi7,	0	0
+
+
+/macros for new pack, 27 april 68
+
+
+define	load a
+	lac a
+	lio a+1
+	terminate
+
+define	fadd a
+	jdp fad
+	a
+	terminate
+
+equals floadd,fadd
+
+define	mulby a
+	jdp fmp
+	a
+	terminate
+
+define	store a
+	dac a
+	dio a+1
+	terminate
+
+define	fsub a
+	negate
+	jdp fad
+	a
+	negate
+	terminate
+
+
+define	divby a
+	jdp fdv
+	a
+	terminate
+
+negate=cma∨cmi
+
+
+/constants
+
+zero,	0	0
+zer=zero
+one,	200600	0
+two,	201200	0
+three,	201300	0
+thr=three
+four,	201600	0
+for=four
+five,	201640	0
+fiv=five
+/ten and hun (100.) exist elsewhere
+pi,	201311	37553
+pi2,	200711	37553
+2pi,	201711	37553
+m1,	577177	777777
+m2,	576577	777777
+haf,	200200	0
+pt1,	176714	631463	/0.1
+p01,	175243	656051	/0.01
+rt2,	200665	11715	/sq root of 2.0
+
+dimension tem(2),tmp(2)	/so always available
+
+dimension fb1(2),fb3(2),fb5(2)	/used by functions
+
+
+/sqrt, 4 feb 1969
+/Newton-Raphson method, 3 iterations
+/call by jdp fsr
+/sqrt(AI) → AI
+/5.1 msec
+
+fsr,	0
+	spa
+	negate
+	A∨IP|
+	jmp i fsr
+	dac fi7
+	dio flo
+	scr 1s	/approximate sqrt(x) by
+	rar 8s	/ x/2+.4750 in [.5,1)
+	spa	/or x/2+.4645 in [1,2)
+	add (202000	/relative error < .0355
+	ral 8s
+	add (100172
+	dac fi9
+	law i 3
+	dac fix
+fsa,	dio fi9+1
+	lac fi7
+	lio flo
+	divby fi9
+	floadd fi9
+	sub (400
+	dac fi9
+	isp fix
+	jmp fsa
+	lac fi9
+	jmp i fsr
+
+
+/log, 18 dec 1968
+/call by jdp fln
+/ln(AI) → AI
+/10 msec
+
+ln2,	200261	344137	/.6931471 (ln(2))
+fln,	0
+	jdp lg2
+	jdp fmp
+	ln2
+	jmp i fln
+
+/log base 2
+/Hastings, Approxs. for dig. comp., p166
+/call by jdp lg2
+/log2(AI) → AI
+/10 msec
+
+lg2,	0
+	jdp fnm
+	spq
+	hlt	/zero or negative
+	and (377
+	dio fb3 1
+	lio (-401
+	sub (265
+	sma
+	SII|	/>1/sqrt 2
+	add (400	/<1/sqrt 2
+	add (200265
+	dac fb3
+	lai
+	add ft7
+	jdp flo
+	store fb1
+	lac one
+	cli
+	floadd fb3
+	store fb5
+	cli∨cmi
+	lac m1
+	floadd fb3
+	divby fb5
+	store fb5
+	mulby fb5
+	store fb3
+	mulby flh
+	floadd flh+2
+	mulby fb3
+	floadd flh+4
+	mulby fb3
+	floadd flh+6
+	mulby fb5
+	floadd fb1
+	jmp i lg2
+flh,	177736	256453	/.4342597
+	200223	460041	/.5765385
+	200366	161113	/.9618007
+	201270	524353	/2.885390
+
+
+/exp, 18 dec 1968
+/call by jdp exp
+/e^(AI) → AI
+/7 msec
+
+exp,	0
+	jdp fmp
+	f2a+14
+	jdp f2x
+	jmp i exp
+
+
+/2^x
+/Ralston and Wilf, p.19
+/call by jdp f2x
+/2^(AI) → AI
+/6.5 msec
+
+f2x,	0
+	dac fb3
+	dio fb3+1
+	div (204400
+	hlt	/| exp| _> 256.
+	lac fb3
+	lio fb3+1
+	jdp fix
+	-8.
+	dac fb3
+	and (777400
+	spa
+	sub (1
+/separation of integer and fraction parts is bad by one bit
+/here if arg is negative, maybe someone would like to fix it
+	dac fb1
+	law 377
+	and fb3
+	xor fc1	/200000
+	jdp fnm
+	floadd f2a+12
+/if fraction part = 0.5, will get zero here, divide overflow
+/will occur, seems to get correct result exactly
+	store fb3
+	load f2a
+	divby fb3
+	floadd fb3
+	store fb5
+	load f2a+2
+	divby fb5
+	floadd fb3
+	floadd f2a+4
+	store fb5
+	load f2a+6
+	divby fb5
+	floadd f2a+10
+	add fb1
+	jmp i f2x
+
+f2a,	202646	404677	/20.81369
+	203720	106056	/104.0684
+	575165	400516	/-17.31234
+	574474	104154	/-48.96669
+	577112	766062	/-1.414213 (-sq rt of 2)
+	577577	777777	/-0.5
+	200670	524355	/1.44269504 (log2(e))
+
+
+/a^b, 20 dec 1968
+/call by jdp fxp followed by exponent
+/AI^exponent → AI
+/base must be _> 0, 0^0 = 0
+/17.5 msec
+
+fxp,	0
+	dac fmp
+	aam
+	lac fxp
+	dac .+7
+	idx fxp
+	lac fmp
+	sza i
+	jmp i fxp	/base is zero
+	jdp lg2
+	jdp fmp
+	0
+	jdp f2x
+	jmp i fxp
+
+
+/a^i, 20 dec 1968
+/call by jdp ixp followed by exponent (integer)
+/AI^exponent → AI
+/~ 1.1 log2(exponent) msec
+
+ixp,	0
+	store fb3
+	lio one
+	dio fb1
+	dzm fb1+1
+	TXA
+	dac fb5
+	lxr ixp
+	idx ixp
+	lxr i 0
+	lac i 0
+	lio (jdp fdv
+	spa
+	CAA|
+	lio ixb+2	/jdp fmp
+	dio ixo
+ixc,	scr 1s
+	TAX
+	spi i
+	jmp ixb
+	load fb1
+ixo,	0	/jdp fmp or fdv
+	fb3
+	store fb1
+ixb,	load fb3
+ixb+2,	mulby fb3
+	store fb3
+	TXAP
+	jmp ixc
+	load fb1
+	lxr fb5
+	jmp i ixp
+
+/trailer
+
+constants
+variables
+	repeat if2,[
+	repeat 1~ifup 2,[
+	printx .first free location = .
+	printo .
+	printx /
+/]
+]
+start
+
+start
+
+rt
+
+start
+
+.
+	printo .
+	printx /
+/]
+]
+start

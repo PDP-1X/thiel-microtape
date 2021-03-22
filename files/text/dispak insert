@@ -1,0 +1,119 @@
+/what about your title?
+/6.25 macro system
+/modified 3/27/69 by D. W. Thiel to include variable size characters and
+/ an improved version of message
+/display macros for 6.25
+.knb=6300
+.but=6302
+.swt=6304
+.sop=6306
+.sdp=6310
+.cd=6312
+.cdx=6314
+.cdy=6315
+.lin=6316
+.tpn=6320
+.pnt=6322
+.save=6324
+.rstor=6326
+.txx=6330
+.size=6331
+
+define	setxy x,y
+	jdp .save
+	lac x	sal 8s	dac .cdx
+	lio y	sil 8s	dio .cdy
+	jdp .rstor
+	termin
+
+define	penpos x,y
+	jdp .save
+	jdp .tpn
+	dac x	dio y
+	jdp .rstor
+	termin
+
+define	writec c
+	jdp .save
+	lac c	jdp .cd
+	jdp .rstor
+	termin
+
+define	point x,y
+	jdp .save
+	lac x
+	lio y
+	jdp .pnt
+	jdp .rstor
+	termin
+
+define	line x1,y1,x2,y2
+	jdp .save
+	lac x2	lio y2	dac . 5	dio . 5
+	lac x1	lio y1
+	jdp .lin
+	0	0
+	jdp .rstor
+	termin
+
+define	octdis n
+	jdp .save
+	lac n
+	jdp .sop
+	jdp .rstor
+	termin
+
+define	decdis n
+	jdp .save
+	lac n
+	jdp .sdp
+	jdp .rstor
+	termin
+
+define	knob n,val
+	jdp .save
+	jdp .knb
+	ckn n'00
+	val
+	jdp .rstor
+	termin
+
+define	button n,ldown
+	jdp .save
+	jdp .but
+	n
+	jmp ldown
+	termin
+
+define	switch m,ldown
+	jdp .save
+	jdp .swt
+	m
+	jmp ldown
+	termin
+
+define	message w
+	jdp .save
+	jsp .txx
+	text *w*37**
+	jdp .rstor
+	termin
+
+define	setsize x
+	jdp .save
+	lio x
+	jdp .size
+	jdp .rstor
+	termin
+
+go,	setxy (-300,(200
+	knob 1,‾x
+	message [hElElOp/.(0)12345-l
+-lasdfgterhjkl12448987fghteiqw
+
+)
+]
+	jmp go
+	constants
+	variables
+2*

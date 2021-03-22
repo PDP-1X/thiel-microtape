@@ -1,0 +1,125 @@
+/what about your title?
+/6.273 macro system
+/6.273 floating point macro package
+/flags and address mode saved
+/can use macros in any address mode except bam
+
+.sin=6031
+.cos=6036
+.fpi2=7162
+.fmin1=7166
+.fmin2=7170
+.fhalf=7172
+.fpt1=7174
+.fpt01=7176
+.fzero=7144
+.fone=7146
+.ftwo=7150
+.fthre=7152
+.ffour=7154
+.ften=7136
+.fpi=7160
+.f2pi=7164
+.fhun=7134
+.fmul=6044
+.fdiv=6045
+.fadd=6043
+.fln=6050
+.flog=6055
+.fsqrt=6066
+.fexp=6073
+.fix=6100
+.float=6106
+.fixa=6113
+.fixb=6122
+.frtr=6047
+.frti=6046
+.fip=6020
+.fop=6000
+
+
+
+/floating point macros for 6.273
+
+
+
+define	finput
+	jdp .fip
+	tyi
+	terminate
+
+define	fotput
+	jdp .fop
+	tyo
+	terminate
+
+negate=cmi∨cma
+
+define	fadd a
+	jdp .fixa
+	jdp i .fadd
+	a
+	jdp .fixb
+	terminate
+
+define	fmul a
+	jdp .fixa
+	jdp i .fmul
+	a
+	jdp .fixb
+	terminate
+
+define	fdiv a
+	jdp .fixa
+	jdp i .fdiv
+	a
+	jdp .fixb
+	terminate
+
+define	frti n
+	jdp .fixa
+	jdp i .frti
+	n
+	jdp .fixb
+	terminate
+
+define	frtr a
+	jdp .fixa
+	jdp i .frtr
+	a
+	jdp .fixb
+	terminate
+
+
+fln=jdp .fln
+log=jdp .flog
+fsqrt=jdp .fsqrt
+fexp=jdp .fexp
+ifix=jdp .fix
+float=jdp .float
+sin=jdp .sin
+cos=jdp .cos
+
+define	load x
+	lac x
+	lio x 1
+	terminate
+
+define	store x
+	dac x
+	dio x 1
+	terminate
+
+0mu152jd1 */	0mu1*i 1152ku10*2*
+  	fexp
+	fotput
+	cli∨cmi
+	tyo
+	fln
+	fsqrt
+fotput
+	cli∨cmi
+tyo
+cli∨cmi
+	tyo
+2s

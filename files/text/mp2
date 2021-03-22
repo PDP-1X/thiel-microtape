@@ -1,0 +1,587 @@
+/what about your title?
+/6.25 macro system
+/display macros for 6.25
+.knb=6300
+.but=6302
+.swt=6304
+.sop=6306
+.sdp=6310
+.cd=6312
+.cdx=6314
+.cdy=6315
+.lin=6316
+.tpn=6320
+.pnt=6322
+.save=6324
+.rstor=6326
+.txx=6330
+
+define	setxy x,y
+	jdp .save
+	lac x	sal 8s	dac .cdx
+	lio y	sil 8s	dio .cdy
+	jdp .rstor
+	termin
+
+define	penpos x,y
+	jdp .save
+	jdp .tpn
+	dac x	dio y
+	jdp .rstor
+	termin
+
+define	writec c
+	jdp .save
+	lac c	jdp .cd
+	jdp .rstor
+	termin
+
+define	point x,y
+	jdp .save
+	lac x
+	lio y
+	jdp .pnt
+	jdp .rstor
+	termin
+
+define	line x1,y1,x2,y2
+	jdp .save
+	lac x2	lio y2	dac . 5	dio . 5
+	lac x1	lio y1
+	jdp .lin
+	0	0
+	jdp .rstor
+	termin
+
+define	octdis n
+	jdp .save
+	lac n
+	jdp .sop
+	jdp .rstor
+	termin
+
+define	decdis n
+	jdp .save
+	lac n
+	jdp .sdp
+	jdp .rstor
+	termin
+
+define	knob n,val
+	jdp .save
+	jdp .knb
+	ckn n'00
+	val
+	jdp .rstor
+	termin
+
+define	button n,ldown
+	jdp .save
+	jdp .but
+	n
+	jmp ldown
+	termin
+
+define	switch m,ldown
+	jdp .save
+	jdp .swt
+	m
+	jmp ldown
+	termin
+
+define	message w
+	jdp .save
+	jsp .txx
+	irpc v,w
+	char r'v
+	endirp
+	37
+	jdp .rstor
+	termin
+
+/ Start by jumping to display of messages of operating instructions
+	jmp beginc
+/This displays a message on the screen.  This is part of the modified
+/ 6.25 macro package
+txx,	dap txy
+	nam
+	lio i txy
+	idx txy
+	lac (607600
+	rcl 6s
+	sad (760037
+txy,	jmp .
+	sad (760060
+	jmp txx 1
+dio ‾iosave
+	jdp .cd
+	lio ‾iosave
+	nam
+	jmp txy-3
+/ This is a subroutine to find the element in a table closest to a given point
+define	search
+	jdp scha
+	terminate
+
+/ This macro displays the coordinates of points and mafker crosses
+define	set x,y,/g
+	switch 2,g
+	lac y
+	add (6
+	dac ‾ya
+	lac x
+	add (6
+	dac ‾xa
+	setxy xa,ya
+	decdis x
+	message [,]
+	decdis y
+	lac x
+	add (22
+	dac xa
+	sub (44
+	dac ‾xb
+	line xb,y,xa,y
+	lac y
+add (22
+	dac xa
+	sub (44
+	dac xb
+	line x,xb,x,xa
+g,	nop
+	terminate
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+define	index
+	SII
+	SXX
+	terminate
+dimension tablef(402)
+table=tablef 2
+
+begin,	law 1
+	iam
+	dac ‾ptr
+	dzm table
+	dzm ‾sw
+	dzm ‾pickst
+	lac (377777
+	dac ‾larg
+
+/ This is where the program actually begins
+begina,	button 0,setpt
+	dzm ‾setsw
+	button 2,begin
+beginb,	button 1,pickpt
+	dzm pickst
+/ This is the section that displays points on the screen
+dsply,	switch 0,wason
+	lac sw
+	sza i
+	jmp wr
+	lac (cma
+	dac ‾x1
+	dzm sw
+	lac (nop
+	dac ‾x2
+	jmp aaa
+wason,	law 1
+	and sw
+	sza
+	jmp wr
+	law 1
+	dac sw
+	lac (cma
+	dac x2
+	lac (nop
+	dac x1
+aaa,	szs 10
+	jmp aaa1
+	knob 0,x1
+	knob 1,y1
+	point x1,y1
+aaa1,	lxr (1
+	lio table
+	cmi
+aa,	TII=|
+	jmp wr
+	lac i table
+	xct x2
+	dac ‾t
+	lac i table 1
+	xct x1
+	dac i table
+	lac t
+	dac i table 1
+	repeat 2,index
+	jmp aa
+/ This section displays the points
+wr,	lio table
+
+
+
+
+
+
+
+	lxr (1
+	sni i
+	cmi
+	sni
+	jmp begina
+	lac table
+	sar 1s
+	dac ‾ppppb
+	setxy (-470,(470
+	message [There are  ]
+	decdis ppppb
+	message [ points in table]
+	lac i table
+	dac x1
+	index
+	lac i table
+	dac ‾y1
+	set x1,y1
+	index
+xd,	sni
+	jmp begina
+	lac i table
+	dac x2
+	index
+	lac i table
+	dac ‾y2
+	index
+	line x1,y1,x2,y2
+	set x2,y2
+	lac x2
+	dac x1
+	lac y2
+	dac y1
+	jmp xd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/ This sets a new point in the table
+setpt,	lac setsw
+	sza
+	jmp beginb
+	switch 1,bzx
+	idx setsw
+bzx,	dzm pickst
+	lac table
+	sub (375
+	sma
+	jmp tobig
+	szs 10
+	jmp kb
+	penpos x1,y1
+	jmp k11
+kb,	knob 0,x1
+	knob 1,y1
+	point x1,y1
+k11,	lxr ptr
+	lac y1
+	dac i table 1
+	lac x1
+	dac i table
+	repeat 2,idx table	idx ptr
+	jmp dsply
+
+tobig,	setxy (-470,(460
+	message [Table filled]
+	jmp begina
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/ This routine finds a point in the table and moves it
+pickpt,	szs 10
+	jmp pk1
+	penpos x1,y1
+	jmp pk11
+pk1,	knob 0,x1
+	knob 1,y1
+	point x1,y1
+pk11,	lac pickst
+	sza
+	jmp move
+	idx pickst
+	set x1,y1
+	search
+	jmp found
+scha,	0
+	dzm ptra
+	lxr (1
+	lio table
+	sni i
+	cmi
+a,	sni
+find,	jmp i scha
+	lac i table
+	sub x1
+	spa
+	cma
+	dac ‾axy
+	lac i table 1
+	sub y1
+	spa
+	cma
+	add axy
+
+	dac ‾axz
+	repeat 2,index
+	sub larg
+	spa i
+	jmp a
+	TXXA
+	dac ‾ptra
+	lac axz
+	dac larg
+vx,	jmp a
+
+move,	lac x1
+	lxr ptra
+	dac i table-2
+	lac y1
+	dac i table-1
+	jmp dsply
+found,	lac (377777
+	dac larg
+	jmp dsply
+
+
+
+
+beginc,	setxy (-450,(460
+	message [David W. Thiel   MP3A]
+	setxy (-450,(360
+	message [Button 0 sets a new point in the table]
+	setxy (-450,(260
+	message [Button 1 moves a point indicated by the pen]
+	setxy (-450,(160
+	message [Button 3 reinitializes the system]
+
+
+
+
+
+
+
+	setxy (-450,(60
+	message [Switch 0 rotates the display 90 degrees]
+	setxy (-450,(-40
+	message [Switch 1 allows points to be entered continuously]
+	setxy (-450,(-140
+	message [Switch 2 supresses the printing of coordinates]
+	setxy (-450,(-240
+message [Press Button 8 to end this display and start program]
+	button 8,ext
+	jmp beginc
+ext,	jmp begin
+
+constants
+variables
+
+start	begin
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+es]
+	setxy (-450,(-40
+	message [Switch 1 allows points to be entered continuously]
+	setxy (-450,(-140
+	message [Switch 2 supresses the printing of coordinates]
+	setxy (-450,(-240
+message [Press Button 8 to end this display and start program]
+	button 8,ext
+	jmp beginc
+ext,	jmp begin
+
+constants
+variables
+
+start	begin
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ge [Button 0 set2j0

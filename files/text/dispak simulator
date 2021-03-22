@@ -1,0 +1,534 @@
+DISPAK SIMULATOR
+/6.25 simulator package for the dispak programs
+/modified by D.W. Thiel on 3/27/69 to include variable size characters
+/and an improved message macro
+/This set of programs simulates dispak saved on the on
+/line typewriter. It prints what would be displayed
+/and tells you where it is being displayed.
+/On input, it requests that the coordinates be typed, separated
+/by a comma.
+
+
+6300/
+.knb,	0
+	jmp .knb1
+.but,	0
+	jmp .but1
+.swt,	0
+	jmp .swt1
+.sop,	0
+	jmp .sop1
+.sdp,	0
+	jmp .sdp1
+.cd,	0
+	jmp .cd2
+.cdx,	0
+.cdy,	0
+.lin,	0
+	jmp .lin1
+.tpn,	0
+	jmp .tpn1
+.pnt,	0
+	jmp .pnt1
+.save,	0
+	jmp .save1
+.rstor,	0
+	jmp .rstr1
+.tx1,	jmp mes
+.size,	0
+	jmp siz
+
+.knb1,	jsp .txx
+text /
+Knob /
+	lac i .knb
+	and (700
+	rar 6s
+	lia
+	sni
+	lio (char r0
+	tyo
+	jsp .txx
+text - has value of?	-
+	jdp .inp
+	sil 8s
+	sir 8s
+	idx .knb
+	lac i .knb
+	dap .+1
+	dio .
+	idx .knb
+	jmp i .knb
+
+
+
+.but1,	jsp .txx
+text /
+Button /
+	lio i .but
+	sni
+	lio (char r0
+	tyo
+	jsp .txx
+text - = u or d?	-
+	tyi
+	lai
+	sad (char ru
+	jmp .+4
+	sas (char rd
+	jmp .but1
+	jmp .+2
+	idx .but
+	idx .but
+	jdp .rstor
+	jmp i .but
+
+
+
+
+.swt1,	jsp .txx
+text /
+Switch /
+	lio i .swt
+	sni
+	lio (char r0
+	tyo
+	jsp .txx
+text - = u or d?	-
+	tyi
+	lai
+	sad (char ru
+	jmp .+4
+	sas (char rd
+	jmp .swt1
+	jmp .+2
+	idx .swt
+	idx .swt
+	jdp .rstor
+	jmp i .swt
+
+/jdp .sop and jdp .sdp
+
+.sop1,	dac .rem
+	jmp .octl
+.sdp1,	clf 7	/initialize flags
+	dzm .‾rem
+	sma	/check for negative
+	jmp .+3
+	stf 2	/flag 2 indicates negative
+	cma	/make positive
+	dac .‾num
+	law i 5
+	dac .‾ctr
+.divid,	lac .num
+	mul (1
+	div .+1
+	10.
+	dac .num	/save quotient
+	lac .rem
+	rcr 4s
+	dac .rem
+	isp .ctr
+	jmp .divid
+	lac .rem
+	rcl 2s
+	dac .rem
+	jmp .decp1	/decimal
+.octl,	jsp .txx
+text /
+Octal /
+	dzm .‾shf
+	lac .rem
+	jdp .octpt
+	lac .shft
+	dac .shf
+	jdp .coord
+	lac .shf
+	adm .cdx
+	jmp i .sop
+.decp1,	jsp .txx
+text /
+Decimal /
+	dzm .shf
+	lac .rem
+	jdp .decpt	/decimal
+	lac .shft
+	dac .shf
+	jdp .coord
+	lac .shf
+	adm .cdx
+	jmp i .sdp
+
+
+/message display-writec and message
+/jdp .cd
+
+
+.cd2,	dac .‾cd1
+	jsp .txx
+text /
+Display /
+	lio .cd1
+	tyo
+	jdp .coord
+	law 7000
+	adm .cdx
+	jmp i .cd
+
+.coord,	0
+	jsp .txx
+text / at (/
+	lac .cdx
+	sar 8s
+	jdp .octpt
+	lio (char r,
+	tyo	/print a comma
+	lac .cdy
+	sar 8s
+	jdp .octpt
+	lio (char r)
+	tyo
+	jmp i .coord
+
+
+/decimal printing routine
+
+.decpt,	0
+	dzm .shft
+	szf i 2
+	jmp .dec
+	lio (char r-
+	tyo
+	swp
+	law 7000
+	adm .shft
+	swp
+.dec,	dac .store
+	law i 5	/set up counter
+	dac .ctr
+	cli
+	lac .store
+	rcl 2s
+	jmp .dec2
+.dec1,	cli
+	lac .store
+	rcl 4s
+.dec2,	dac .store
+	sni i	/test for leading zeros
+	jmp .dec4
+	isp .ctr
+	jmp .dec1
+	jdp .type
+	law 7000
+	adm .shft
+	jmp i .decpt	/all zeros
+.dec3,	lac .store
+	rcl 4s
+	dac .store
+.dec4,	jdp .type
+	law 7000
+	adm .shft
+	isp .ctr
+	jmp .dec3
+	jmp i .decpt
+
+
+/octal printing
+
+.octpt,	0
+	dzm .shft
+	sma
+	jmp .oct
+	cma
+	swp
+	law 7000
+	adm .shft
+	swp
+	lio (char r-
+	tyo
+.oct,	dac .‾store
+	law i 6
+	dac .‾ctr
+.oct1,	cli
+	lac .store
+	rcl 3s
+	dac .store
+	sni i
+	jmp .oct3	/no leading zeros
+	isp .ctr	/still zeros
+	jmp .oct1
+	jdp .type
+	law 7000
+	adm .‾shft
+	jmp i .octpt
+.oct2,	lac .store
+	cli
+	rcl 3s
+	dac .store
+.oct3,	jdp .type
+	law 7000
+	adm .shft
+	isp .ctr
+	jmp .oct2
+	jmp i .octpt
+
+
+/routine to type numbers
+
+.type,	0
+	lai
+	and (17
+	sza i	/test for zero
+	lac (char r0
+	lia
+	tyo
+	jmp i .type
+
+
+/routine to print messages
+
+.txx,	dap .txy
+	lio i .txy
+	idx .txy
+	lac (607600
+	rcl 6s
+	sad (lai
+.txy,	jmp .
+	sad .+2
+	jmp .txx+1
+	swp
+	tyo
+	lia
+	jmp .txy-3
+
+
+/character size option simulator
+
+siz,	dio siz1‾
+	jsp .txx
+	text -
+Character size=	-
+	lac siz1
+	TAI>
+	lio (1
+	law i 300
+	A+I<
+	lio (300
+	TIIA
+	dac siz1
+	jdp .octpt
+	lio siz1
+	sil 6s
+	lai
+	sil 1s
+	A+II
+	sil 1s
+	A+II
+	dio siz6
+	jsp .txx
+	text /
+/
+	jmp i .size
+siz6,	7001
+
+
+
+/Line display simulator
+
+.lin1,	dac .numx
+	dio .‾numy
+	jsp .txx
+text /
+Line from (/
+	lac .numx
+	jdp .octpt
+	lio (char r,
+	tyo
+	lac .numy
+	jdp .octpt
+	jsp .txx
+text /) to (/
+	lac i .lin
+	jdp .octpt
+	idx .lin
+	lio (char r,
+	tyo
+	lac i .lin
+	jdp .octpt
+	lio (char r)
+	tyo
+	idx .lin
+	jmp i .lin
+
+.save1,	dac .ac‾
+	dio .io‾
+	TXXI
+	dio .x‾r
+	rpf
+	dio .f‾
+	nam
+	lio .io
+	jmp i .save
+
+
+.rstr1,	lio .f
+	lpf
+	lxr .xr
+	lio .io
+	lac .ac
+	jmp i .rstor
+
+/routine to input numbers
+/takes two numbers separated by a comma
+/number preceding comma is in AC
+/number preceeding carriage return is in IO
+/may be signed with one minus sign
+/assumed plus, plus sign not allowed
+
+
+.inp,	0
+	clf 7
+	dzm .num
+	dzm .num‾x
+.over,	tyi
+	swp
+	sad (char r-
+	jmp .+2
+	jmp .rep+2
+	stf 1
+.rep,	tyi
+	lai
+	sad (char r,
+	jmp .comma
+	sad (char r
+
+	jmp .carret
+	dac .store
+	sad (char r0
+	cla
+	sub (8.
+	sma
+	jmp .nogood
+	lac .store
+	sad (char r0
+	cla
+	lia
+	rir 3s
+	lac .num
+	rcl 3s
+	dac .num
+	jmp .rep
+.comma,	lac .num
+	szf 1
+	cma
+	clf 1
+	dac .numx
+	dzm .num
+	jmp .over
+.carret,	lac .num
+	szf 1
+	cma
+	clf 1
+	lia
+	lac .numx
+	jmp i .inp
+.nogood,	jsp .txx
+text /
+Octal only. Start again.
+		/
+	jmp .inp 1
+
+
+/jdp .tpn  light pen simulator
+.tpn1,	jsp .txx
+text -
+penpos→ x,y =?	-
+	jdp .inp
+	jmp i .tpn
+
+/point display simulator
+/jdp .pnt
+
+.pnt1,	dac .pn‾1
+	dio .pn‾2
+	jsp .txx
+text /
+Point at (/
+	lac .pn1
+	jdp .octpt
+	lio (char r,
+	tyo
+	lac .pn2
+	jdp .octpt
+	lio (char r)
+	tyo
+	jmp i .pnt
+
+/new message routine   D. Thiel   12/12/68
+
+
+mes,	dap txs
+	jsp .txx
+	text /
+Message [/
+	dzm tx2	/count of characters printed
+	nam
+	lio i txs
+	idx txs
+	lac (607600
+	rcl 6s
+	sad (760037
+tx0,	jmp . 10
+	sad (760060
+	jmp tx0-5
+	swp
+	tyo
+	lia
+	idx tx2‾
+	jmp tx0-3
+	jsp .txx
+	text /]/
+	jdp .coord
+	lac tx2
+	mul (siz6
+	lai
+	rar 1s
+	adm .cdx
+txs,	jmp .
+
+
+
+constants
+variables
+
+
+	repeat if2∧ifup 4,[printx /.knb=/	printo .knb	printx /
+.but=/	printo .but	printx /
+.swt=/	printo .swt	printx /
+.sop=/	printo .sop	printx /
+.sdp=/	printo .sdp	printx /
+.cd =/	printo .cd	printx /
+.cdx=/	printo .cdx	printx /
+.cdy=/	printo .cdy	printx /
+.lin=/	printo .lin	printx /
+.tpn=/	printo .tpn	printx /
+.pnt=/	printo .pnt	printx /
+.save=/	printo .save	printx /
+.rstor=/	printo .rstor	printx /
+.tx1=/	printo .tx1	printx /
+.size=/	printo .size	printx /
+
+
+first available location =/	printo .+1	printx /
+/
+
+]
+start
+
+start
+
+start
+
+nd the pen
+/jdp .tpn , returns right justified x,y in ac,io
+tpn_='PK
